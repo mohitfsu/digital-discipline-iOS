@@ -39,16 +39,24 @@ jobs:
             BUILD_DIR=build \
             2>&1 | tee build_log.txt || (echo "=== COMPILATION ERRORS ===" && grep -E "error:" build_log.txt && exit 1)
 
-      - name: Package App Bundle into Zip
+      - name: Package App and Extensions into Standard IPA
         run: |
-          mkdir -p output
-          cd build/Debug-iphoneos
-          zip -r ../../output/DigitalDiscipline-Debug.zip DigitalDiscipline.app
-          cd ../..
+          # Ensure PlugIns directory exists and copy all app extensions into it
+          mkdir -p build/Debug-iphoneos/DigitalDiscipline.app/PlugIns
+          if ls build/Debug-iphoneos/*.appex 1> /dev/null 2>&1; then
+            cp -r build/Debug-iphoneos/*.appex build/Debug-iphoneos/DigitalDiscipline.app/PlugIns/
+          fi
+          
+          # Package into standard iOS Payload structure for Sideloadly
+          mkdir -p output/Payload
+          cp -r build/Debug-iphoneos/DigitalDiscipline.app output/Payload/
+          cd output
+          zip -r DigitalDiscipline.ipa Payload
+          cd ..
 
-      - name: Upload Build Artifact to GitHub
+      - name: Upload Ready-to-Install IPA to GitHub
         uses: actions/upload-artifact@v4
         with:
-          name: DigitalDiscipline-iOS-Build
-          path: output/DigitalDiscipline-Debug.zip
+          name: DigitalDiscipline-IPA
+          path: output/DigitalDiscipline.ipa
           retention-days: 14
