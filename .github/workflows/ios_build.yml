@@ -33,26 +33,38 @@ jobs:
             -scheme DigitalDiscipline \
             -destination 'generic/platform=iOS' \
             -configuration Debug \
+            -derivedDataPath build_derived \
             CODE_SIGNING_ALLOWED=NO \
             CODE_SIGNING_REQUIRED=NO \
             CODE_SIGN_IDENTITY="" \
-            BUILD_DIR=build \
             2>&1 | tee build_log.txt || (echo "=== COMPILATION ERRORS ===" && grep -E "error:" build_log.txt && exit 1)
 
       - name: Package App and Extensions into Standard IPA
         run: |
-          # Ensure PlugIns directory exists and copy all app extensions into it
-          mkdir -p build/Debug-iphoneos/DigitalDiscipline.app/PlugIns
-          if ls build/Debug-iphoneos/*.appex 1> /dev/null 2>&1; then
-            cp -r build/Debug-iphoneos/*.appex build/Debug-iphoneos/DigitalDiscipline.app/PlugIns/
-          fi
+          # Find the actual compiled DigitalDiscipline.app directory
+          APP_PATH=$(find build_derived -name "DigitalDiscipline.app" -type d | head -n 1)
+          echo "Found compiled app at: $APP_PATH"
           
-          # Package into standard iOS Payload structure for Sideloadly
+          # Ensure PlugIns directory exists inside app bundle
+          mkdir -p "$APP_PATH/PlugIns"
+          
+          # Copy all compiled .appex extensions into PlugIns
+          find build_derived -name "*.appex" -type d | while read -r appex; do
+            echo "Embedding extension: $appex"
+            cp -R "$appex" "$APP_PATH/PlugIns/"
+          done
+          
+          # Construct standard iOS Payload structure
           mkdir -p output/Payload
-          cp -r build/Debug-iphoneos/DigitalDiscipline.app output/Payload/
+          cp -R "$APP_PATH" output/Payload/
+          
+          # Create final IPA
           cd output
-          zip -r DigitalDiscipline.ipa Payload
+          zip -r -9 DigitalDiscipline.ipa Payload
           cd ..
+          
+          # Verify IPA size and contents
+          ls -lh output/DigitalDiscipline.ipa
 
       - name: Upload Ready-to-Install IPA to GitHub
         uses: actions/upload-artifact@v4
