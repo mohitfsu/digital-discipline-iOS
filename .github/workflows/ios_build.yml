@@ -26,40 +26,35 @@ jobs:
       - name: Generate Xcode Project
         run: xcodegen generate
 
-      - name: Build Main App & Extensions
+      - name: Archive Main App & Extensions
         run: |
-          xcodebuild build \
+          xcodebuild archive \
             -project DigitalDiscipline.xcodeproj \
             -scheme DigitalDiscipline \
             -destination 'generic/platform=iOS' \
-            -configuration Debug \
-            -derivedDataPath build_derived \
-            CODE_SIGN_IDENTITY="-" \
+            -archivePath build_output/DigitalDiscipline.xcarchive \
+            CODE_SIGNING_ALLOWED=NO \
             CODE_SIGNING_REQUIRED=NO \
-            CODE_SIGNING_ALLOWED=YES \
-            2>&1 | tee build_log.txt || (echo "=== COMPILATION ERRORS ===" && grep -E "error:" build_log.txt && exit 1)
+            CODE_SIGN_IDENTITY="" \
+            2>&1 | tee build_log.txt || (echo "=== ARCHIVE ERRORS ===" && grep -E "error:" build_log.txt && exit 1)
 
       - name: Package App and Extensions into Standard IPA
         run: |
-          echo "=== Searching for compiled DigitalDiscipline.app ==="
-          APP_DIR=$(find build_derived -name "DigitalDiscipline.app" -type d | head -n 1)
-          echo "Found app bundle at: $APP_DIR"
+          echo "=== Inspecting Archive Contents ==="
+          ls -la build_output/DigitalDiscipline.xcarchive/Products/Applications/
           
-          # List all files inside the app bundle
-          echo "=== Contents of $APP_DIR ==="
-          ls -la "$APP_DIR"
-          
-          # Copy to Payload
+          # Copy real app from xcarchive into Payload
           mkdir -p output/Payload
-          cp -R "$APP_DIR" output/Payload/
+          cp -R build_output/DigitalDiscipline.xcarchive/Products/Applications/DigitalDiscipline.app output/Payload/
           
-          # Embed all compiled appex extensions into PlugIns
-          mkdir -p output/Payload/DigitalDiscipline.app/PlugIns
-          find build_derived -name "*.appex" -type d | while read -r appex; do
-            echo "Embedding: $appex"
-            cp -R "$appex" output/Payload/DigitalDiscipline.app/PlugIns/
-          done
+          # Inspect contents of the app bundle and binary size
+          echo "=== App Bundle Contents ==="
+          ls -la output/Payload/DigitalDiscipline.app
           
+          echo "=== App Binary Size ==="
+          ls -lh output/Payload/DigitalDiscipline.app/DigitalDiscipline || true
+          
+          # Create final IPA
           cd output
           zip -r -9 DigitalDiscipline.ipa Payload
           cd ..
