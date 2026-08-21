@@ -34,36 +34,37 @@ jobs:
             -destination 'generic/platform=iOS' \
             -configuration Debug \
             -derivedDataPath build_derived \
-            CODE_SIGNING_ALLOWED=NO \
+            CODE_SIGN_IDENTITY="-" \
             CODE_SIGNING_REQUIRED=NO \
-            CODE_SIGN_IDENTITY="" \
+            CODE_SIGNING_ALLOWED=YES \
             2>&1 | tee build_log.txt || (echo "=== COMPILATION ERRORS ===" && grep -E "error:" build_log.txt && exit 1)
 
       - name: Package App and Extensions into Standard IPA
         run: |
-          echo "=== Build Products Directory ==="
-          ls -la build_derived/Build/Products/Debug-iphoneos/
+          echo "=== Searching for compiled DigitalDiscipline.app ==="
+          APP_DIR=$(find build_derived -name "DigitalDiscipline.app" -type d | head -n 1)
+          echo "Found app bundle at: $APP_DIR"
           
+          # List all files inside the app bundle
+          echo "=== Contents of $APP_DIR ==="
+          ls -la "$APP_DIR"
+          
+          # Copy to Payload
           mkdir -p output/Payload
-          cp -R build_derived/Build/Products/Debug-iphoneos/DigitalDiscipline.app output/Payload/
+          cp -R "$APP_DIR" output/Payload/
           
-          # Embed all extensions into PlugIns
+          # Embed all compiled appex extensions into PlugIns
           mkdir -p output/Payload/DigitalDiscipline.app/PlugIns
-          for appex in build_derived/Build/Products/Debug-iphoneos/*.appex; do
-            if [ -d "$appex" ]; then
-              echo "Embedding extension: $appex"
-              cp -R "$appex" output/Payload/DigitalDiscipline.app/PlugIns/
-            fi
+          find build_derived -name "*.appex" -type d | while read -r appex; do
+            echo "Embedding: $appex"
+            cp -R "$appex" output/Payload/DigitalDiscipline.app/PlugIns/
           done
-          
-          echo "=== Final App Size ==="
-          du -sh output/Payload/DigitalDiscipline.app
           
           cd output
           zip -r -9 DigitalDiscipline.ipa Payload
           cd ..
           
-          echo "=== Final IPA File Size ==="
+          echo "=== Final IPA File Info ==="
           ls -lh output/DigitalDiscipline.ipa
 
       - name: Upload Ready-to-Install IPA to GitHub
