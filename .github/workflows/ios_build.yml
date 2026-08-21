@@ -28,27 +28,27 @@ jobs:
 
       - name: Build Main App & Extensions
         run: |
-          xcodebuild \
+          xcodebuild build \
             -project DigitalDiscipline.xcodeproj \
             -scheme DigitalDiscipline \
             -destination 'generic/platform=iOS' \
-            -configuration Release \
+            -configuration Debug \
             CODE_SIGNING_ALLOWED=NO \
             CODE_SIGNING_REQUIRED=NO \
             CODE_SIGN_IDENTITY="" \
             BUILD_DIR=build \
-            COMPILER_INDEX_STORE_ENABLE=NO
+            2>&1 | tee build_log.txt || (echo "=== COMPILATION ERRORS ===" && grep -E "error:" build_log.txt && exit 1)
 
       - name: Package App Bundle into Zip
         run: |
           mkdir -p output
-          cd build/Release-iphoneos
-          zip -r ../../output/DigitalDiscipline-Release.zip DigitalDiscipline.app
+          cd build/Debug-iphoneos
+          zip -r ../../output/DigitalDiscipline-Debug.zip DigitalDiscipline.app
           cd ../..
 
       - name: Upload Build Artifact to GitHub
         uses: actions/upload-artifact@v4
         with:
           name: DigitalDiscipline-iOS-Build
-          path: output/DigitalDiscipline-Release.zip
+          path: output/DigitalDiscipline-Debug.zip
           retention-days: 14
