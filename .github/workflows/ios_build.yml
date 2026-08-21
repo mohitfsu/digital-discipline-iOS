@@ -10,25 +10,21 @@ on:
 jobs:
   build-ios:
     name: Build & Package iOS App
-    runs-on: macos-14
+    runs-on: macos-15
 
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
 
-      - name: Select Latest Xcode Version
+      - name: Verify Xcode Version
         run: |
-          if [ -d "/Applications/Xcode_16.0.app" ]; then
-            sudo xcode-select -switch /Applications/Xcode_16.0.app/Contents/Developer
-          elif [ -d "/Applications/Xcode_15.4.app" ]; then
-            sudo xcode-select -switch /Applications/Xcode_15.4.app/Contents/Developer
-          fi
+          ls -d /Applications/Xcode*
           xcodebuild -version
 
       - name: Install XcodeGen
         run: brew install xcodegen
 
-      - name: Generate Xcode Project from project.yml
+      - name: Generate Xcode Project
         run: xcodegen generate
 
       - name: Build Main App & Extensions
