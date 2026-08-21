@@ -28,7 +28,6 @@ jobs:
 
       - name: Build Main App & Extensions for Physical Device
         run: |
-          set -o pipefail
           xcodebuild build \
             -project DigitalDiscipline.xcodeproj \
             -scheme DigitalDiscipline \
@@ -37,7 +36,16 @@ jobs:
             CODE_SIGNING_ALLOWED=NO \
             CODE_SIGNING_REQUIRED=NO \
             CODE_SIGN_IDENTITY="" \
-            BUILD_DIR=build
+            BUILD_DIR=build \
+            2>&1 | tee raw_build.log
+          
+          if [ ${PIPESTATUS[0]} -ne 0 ]; then
+            echo "=========================================="
+            echo "COMPILER ERROR REPORT:"
+            echo "=========================================="
+            grep -B 2 -A 4 -E "error:" raw_build.log || cat raw_build.log
+            exit 1
+          fi
 
       - name: Package App and Extensions into Standard IPA
         run: |

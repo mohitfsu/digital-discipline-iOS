@@ -9,32 +9,18 @@ public class DeviceActivityMonitorExtension: DeviceActivityMonitor {
     private let appGroupName = "group.com.digitaldiscipline.app"
     
     public override func intervalDidStart(for activity: DeviceActivityName) {
-        super.intervalDidStart(for: activity)
-        print("DeviceActivityMonitor: intervalDidStart for \(activity.rawValue)")
-        
-        // Enforce application and category shields
         applyStoredShields()
     }
     
     public override func intervalDidEnd(for activity: DeviceActivityName) {
-        super.intervalDidEnd(for: activity)
-        print("DeviceActivityMonitor: intervalDidEnd for \(activity.rawValue)")
-        
-        // Clear shields upon schedule completion
         clearShields()
     }
     
     public override func eventDidReachThreshold(for activity: DeviceActivityName, event: DeviceActivityEvent.Name) {
-        super.eventDidReachThreshold(for: activity, event: event)
-        print("DeviceActivityMonitor: eventDidReachThreshold for \(event.rawValue)")
-        
-        // Apply immediate lock when daily threshold is exhausted
         applyStoredShields()
     }
     
     public override func intervalWillStartWarning(for activity: DeviceActivityName) {
-        super.intervalWillStartWarning(for: activity)
-        print("DeviceActivityMonitor: 5-minute schedule warning for \(activity.rawValue)")
     }
     
     private func applyStoredShields() {
