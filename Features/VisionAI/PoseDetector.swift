@@ -14,7 +14,13 @@ public struct BodyPoseFrame: Sendable {
     public let rightAnkle: CGPoint?
     
     public let leftShoulder: CGPoint?
+    public let leftElbow: CGPoint?
+    public let leftWrist: CGPoint?
+    
     public let rightShoulder: CGPoint?
+    public let rightElbow: CGPoint?
+    public let rightWrist: CGPoint?
+    
     public let neck: CGPoint?
     public let nose: CGPoint?
     public let root: CGPoint?
@@ -24,6 +30,11 @@ public struct BodyPoseFrame: Sendable {
     public var hasSquatKeypoints: Bool {
         (leftHip != nil && leftKnee != nil && leftAnkle != nil) ||
         (rightHip != nil && rightKnee != nil && rightAnkle != nil)
+    }
+    
+    public var hasPushupKeypoints: Bool {
+        (leftShoulder != nil && leftElbow != nil && leftWrist != nil) ||
+        (rightShoulder != nil && rightElbow != nil && rightWrist != nil)
     }
     
     public var hasBreathingKeypoints: Bool {
@@ -72,7 +83,13 @@ public final class PoseDetector: @unchecked Sendable {
         let rightAnkle = try? observation.recognizedPoint(.rightAnkle)
         
         let leftShoulder = try? observation.recognizedPoint(.leftShoulder)
+        let leftElbow = try? observation.recognizedPoint(.leftElbow)
+        let leftWrist = try? observation.recognizedPoint(.leftWrist)
+        
         let rightShoulder = try? observation.recognizedPoint(.rightShoulder)
+        let rightElbow = try? observation.recognizedPoint(.rightElbow)
+        let rightWrist = try? observation.recognizedPoint(.rightWrist)
+        
         let neck = try? observation.recognizedPoint(.neck)
         let nose = try? observation.recognizedPoint(.nose)
         let root = try? observation.recognizedPoint(.root)
@@ -85,7 +102,11 @@ public final class PoseDetector: @unchecked Sendable {
             rightKnee: AngleCalculator.pointIfConfident(rightKnee, minConfidence: minConfidence),
             rightAnkle: AngleCalculator.pointIfConfident(rightAnkle, minConfidence: minConfidence),
             leftShoulder: AngleCalculator.pointIfConfident(leftShoulder, minConfidence: minConfidence),
+            leftElbow: AngleCalculator.pointIfConfident(leftElbow, minConfidence: minConfidence),
+            leftWrist: AngleCalculator.pointIfConfident(leftWrist, minConfidence: minConfidence),
             rightShoulder: AngleCalculator.pointIfConfident(rightShoulder, minConfidence: minConfidence),
+            rightElbow: AngleCalculator.pointIfConfident(rightElbow, minConfidence: minConfidence),
+            rightWrist: AngleCalculator.pointIfConfident(rightWrist, minConfidence: minConfidence),
             neck: AngleCalculator.pointIfConfident(neck, minConfidence: minConfidence),
             nose: AngleCalculator.pointIfConfident(nose, minConfidence: minConfidence),
             root: AngleCalculator.pointIfConfident(root, minConfidence: minConfidence),

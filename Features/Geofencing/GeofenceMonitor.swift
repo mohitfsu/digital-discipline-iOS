@@ -36,40 +36,48 @@ public final class GeofenceMonitor: NSObject, ObservableObject, CLLocationManage
     }
     
     // MARK: - CLLocationManagerDelegate
-    public func locationManager(_ manager: CLLocationManager, didEnterRegion region: CLRegion) {
-        guard let circular = region as? CLCircularRegion,
-              let matchedZone = dataStore.geofences.first(where: { $0.id == circular.identifier }) else {
-            return
+    nonisolated public func locationManager(_ manager: CLLocationManager, didEnterRegion region: CLRegion) {
+        guard let circular = region as? CLCircularRegion else { return }
+        let regionId = circular.identifier
+        
+        Task { @MainActor in
+            guard let matchedZone = self.dataStore.geofences.first(where: { $0.id == regionId }) else {
+                return
+            }
+            
+            self.activeGeofenceZone = matchedZone
+            UserDefaults(suiteName: AppStorageKeys.appGroupName)?.set(matchedZone.id, forKey: AppStorageKeys.activeGeofenceId)
+            
+            // Auto-apply matched zone profile
+            ProfileTemplateManager.shared.applyPresetType(matchedZone.assignedProfileType)
+            ShieldManager.shared.enforceShields()
+            
+            self.sendLocalNotification(
+                title: "📍 Entered Geofence: \(matchedZone.name)",
+                body: "Switched to \(matchedZone.assignedProfileType.displayName). Distraction shields are now active."
+            )
         }
-        
-        self.activeGeofenceZone = matchedZone
-        UserDefaults(suiteName: AppStorageKeys.appGroupName)?.set(matchedZone.id, forKey: AppStorageKeys.activeGeofenceId)
-        
-        // Auto-apply matched zone profile
-        ProfileTemplateManager.shared.applyPresetType(matchedZone.assignedProfileType)
-        ShieldManager.shared.enforceShields()
-        
-        sendLocalNotification(
-            title: "📍 Entered Geofence: \(matchedZone.name)",
-            body: "Switched to \(matchedZone.assignedProfileType.displayName). Distraction shields are now active."
-        )
     }
     
-    public func locationManager(_ manager: CLLocationManager, didExitRegion region: CLRegion) {
-        guard let circular = region as? CLCircularRegion,
-              let matchedZone = dataStore.geofences.first(where: { $0.id == circular.identifier }) else {
-            return
-        }
+    nonisolated public func locationManager(_ manager: CLLocationManager, didExitRegion region: CLRegion) {
+        guard let circular = region as? CLCircularRegion else { return }
+        let regionId = circular.identifier
         
-        if activeGeofenceZone?.id == matchedZone.id {
-            self.activeGeofenceZone = nil
-            UserDefaults(suiteName: AppStorageKeys.appGroupName)?.removeObject(forKey: AppStorageKeys.activeGeofenceId)
+        Task { @MainActor in
+            guard let matchedZone = self.dataStore.geofences.first(where: { $0.id == regionId }) else {
+                return
+            }
+            
+            if self.activeGeofenceZone?.id == matchedZone.id {
+                self.activeGeofenceZone = nil
+                UserDefaults(suiteName: AppStorageKeys.appGroupName)?.removeObject(forKey: AppStorageKeys.activeGeofenceId)
+            }
+            
+            self.sendLocalNotification(
+                title: "📍 Exited Geofence: \(matchedZone.name)",
+                body: "Leaving designated zone. Policy restrictions adjusted."
+            )
         }
-        
-        sendLocalNotification(
-            title: "📍 Exited Geofence: \(matchedZone.name)",
-            body: "Leaving designated zone. Policy restrictions adjusted."
-        )
     }
     
     private func sendLocalNotification(title: String, body: String) {
