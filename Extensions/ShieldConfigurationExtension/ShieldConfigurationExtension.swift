@@ -13,6 +13,14 @@ public class ShieldConfigurationExtension: ShieldConfigurationDataSource {
         )
     }
     
+    public override func configuration(shielding application: Application, in category: ActivityCategory) -> ShieldConfiguration {
+        let categoryName = category.localizedDisplayName ?? "This Category"
+        return makeShieldConfig(
+            title: "CATEGORY RESTRICTED",
+            subtitle: "\(categoryName) apps are currently locked by your active Digital Discipline policy."
+        )
+    }
+    
     public override func configuration(shielding webDomain: WebDomain) -> ShieldConfiguration {
         let domain = webDomain.domain ?? "This Website"
         return makeShieldConfig(
@@ -21,11 +29,11 @@ public class ShieldConfigurationExtension: ShieldConfigurationDataSource {
         )
     }
     
-    public override func configuration(shielding category: ActivityCategory) -> ShieldConfiguration {
+    public override func configuration(shielding webDomain: WebDomain, in category: ActivityCategory) -> ShieldConfiguration {
         let categoryName = category.localizedDisplayName ?? "This Category"
         return makeShieldConfig(
-            title: "CATEGORY RESTRICTED",
-            subtitle: "\(categoryName) apps are currently locked by your active Digital Discipline policy."
+            title: "DOMAIN CATEGORY BLOCKED",
+            subtitle: "\(categoryName) web browsing is restricted during your focus window."
         )
     }
     
@@ -35,7 +43,9 @@ public class ShieldConfigurationExtension: ShieldConfigurationDataSource {
         let secondaryColor = UIColor(red: 148.0/255.0, green: 163.0/255.0, blue: 184.0/255.0, alpha: 1.0)
         
         return ShieldConfiguration(
+            backgroundBlurStyle: nil,
             backgroundColor: darkBg,
+            icon: nil,
             title: ShieldConfiguration.Label(
                 text: title,
                 color: primaryColor
