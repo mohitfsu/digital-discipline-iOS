@@ -1,6 +1,6 @@
 import SwiftUI
 
-/// Unified Intervention Hub offering all 35 Physical, Mindful, and Cognitive Resets with Dynamic Escalation
+/// Unified Intervention Hub offering all 42 Physical, Mindful, Cognitive, and Creative Resets with Dynamic Escalation
 public struct UnifiedFrictionHubView: View {
     @Environment(\.dismiss) private var dismiss
     @ObservedObject var dataStore = SharedDataStore.shared
@@ -21,7 +21,7 @@ public struct UnifiedFrictionHubView: View {
                         // Dynamic Escalation Status Card
                         dynamicEscalationCard
                         
-                        // 35-Intervention Catalog Banner
+                        // 42-Intervention Catalog Banner
                         catalogPickerBanner
                         
                         // Featured Category Quick Picks
@@ -43,7 +43,7 @@ public struct UnifiedFrictionHubView: View {
                     } label: {
                         HStack(spacing: 4) {
                             Image(systemName: "list.bullet.rectangle.portrait")
-                            Text("All 35")
+                            Text("All 42")
                         }
                         .font(.system(size: 13, weight: .bold))
                         .foregroundColor(DisciplineTheme.accent)
@@ -145,10 +145,10 @@ public struct UnifiedFrictionHubView: View {
                 }
                 
                 VStack(alignment: .leading, spacing: 3) {
-                    Text("FULL 35-INTERVENTION CATALOG")
+                    Text("FULL 42-INTERVENTION CATALOG")
                         .font(.system(size: 13, weight: .heavy, design: .rounded))
                         .foregroundColor(.white)
-                    Text("Calisthenics • Yoga • Pacing • Stoic Wisdom • Puzzles")
+                    Text("Calisthenics • Yoga • Stoic Wisdom • Puzzles • Creative AI")
                         .font(.system(size: 11))
                         .foregroundColor(DisciplineTheme.textSecondary)
                 }
@@ -177,13 +177,13 @@ public struct UnifiedFrictionHubView: View {
                 .foregroundColor(DisciplineTheme.textSecondary)
             
             LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 12) {
-                featuredCard(type: .stroopTest)
+                featuredCard(type: .zenCanvas)
                 featuredCard(type: .squats)
+                featuredCard(type: .scavengerHunt)
+                featuredCard(type: .stroopTest)
                 featuredCard(type: .boxBreathing)
-                featuredCard(type: .wallSit)
-                featuredCard(type: .memoryMatrix)
-                featuredCard(type: .treePose)
-                featuredCard(type: .mathSprint)
+                featuredCard(type: .handMudra)
+                featuredCard(type: .ambientSoundscape)
                 featuredCard(type: .walk30Steps)
             }
         }
