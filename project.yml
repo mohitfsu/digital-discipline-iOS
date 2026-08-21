@@ -1,0 +1,64 @@
+name: DigitalDiscipline
+options:
+  bundleIdPrefix: com.digitaldiscipline
+  deploymentTarget:
+    iOS: "16.0"
+  xcodeVersion: "15.0"
+
+settings:
+  SWIFT_VERSION: "5.9"
+  DEVELOPMENT_TEAM: ""
+  CODE_SIGNING_REQUIRED: "NO"
+  CODE_SIGN_IDENTITY: ""
+  CODE_SIGNING_ALLOWED: "NO"
+
+targets:
+  DigitalDiscipline:
+    type: application
+    platform: iOS
+    deploymentTarget: "16.0"
+    sources:
+      - App
+      - Core
+      - Features
+    info:
+      path: App/Info.plist
+    entitlements:
+      path: App/DigitalDiscipline.entitlements
+    dependencies:
+      - target: DeviceActivityMonitorExtension
+      - target: ShieldConfigurationExtension
+      - target: ShieldActionExtension
+
+  DeviceActivityMonitorExtension:
+    type: app-extension
+    platform: iOS
+    deploymentTarget: "16.0"
+    sources:
+      - Extensions/DeviceActivityMonitorExtension
+    info:
+      path: Extensions/DeviceActivityMonitorExtension/Info.plist
+    entitlements:
+      path: Extensions/DeviceActivityMonitorExtension/DeviceActivityMonitorExtension.entitlements
+
+  ShieldConfigurationExtension:
+    type: app-extension
+    platform: iOS
+    deploymentTarget: "16.0"
+    sources:
+      - Extensions/ShieldConfigurationExtension
+    info:
+      path: Extensions/ShieldConfigurationExtension/Info.plist
+    entitlements:
+      path: Extensions/ShieldConfigurationExtension/ShieldConfigurationExtension.entitlements
+
+  ShieldActionExtension:
+    type: app-extension
+    platform: iOS
+    deploymentTarget: "16.0"
+    sources:
+      - Extensions/ShieldActionExtension
+    info:
+      path: Extensions/ShieldActionExtension/Info.plist
+    entitlements:
+      path: Extensions/ShieldActionExtension/ShieldActionExtension.entitlements

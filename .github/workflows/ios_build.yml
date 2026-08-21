@@ -1,0 +1,52 @@
+name: Build Digital Discipline iOS
+
+on:
+  push:
+    branches: [ main, master ]
+  pull_request:
+    branches: [ main, master ]
+  workflow_dispatch:
+
+jobs:
+  build-ios:
+    name: Build & Package iOS App
+    runs-on: macos-14
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Select Xcode Version
+        run: sudo xcode-select -switch /Applications/Xcode_15.4.app/Contents/Developer
+
+      - name: Install XcodeGen
+        run: brew install xcodegen
+
+      - name: Generate Xcode Project from project.yml
+        run: xcodegen generate
+
+      - name: Build Main App & Extensions
+        run: |
+          xcodebuild build \
+            -project DigitalDiscipline.xcodeproj \
+            -scheme DigitalDiscipline \
+            -destination 'generic/platform=iOS' \
+            -configuration Release \
+            CODE_SIGNING_ALLOWED=NO \
+            CODE_SIGNING_REQUIRED=NO \
+            CODE_SIGN_IDENTITY="" \
+            BUILD_DIR=build
+
+      - name: Package App Bundle into Zip
+        run: |
+          mkdir -p output
+          cd build/Release-iphoneos
+          zip -r ../../output/DigitalDiscipline-Release.zip DigitalDiscipline.app
+          cd ../..
+
+      - name: Upload Build Artifact to GitHub
+        uses: actions/upload-artifact@v4
+        with:
+          name: DigitalDiscipline-iOS-Build
+          path: output/DigitalDiscipline-Release.zip
+          retention-days: 14
