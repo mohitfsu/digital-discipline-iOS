@@ -32,9 +32,10 @@ public class ShieldConfigurationExtension: ShieldConfigurationDataSource {
     private func makeShieldConfig(title: String, subtitle: String) -> ShieldConfiguration {
         let darkBg = UIColor(red: 9.0/255.0, green: 13.0/255.0, blue: 22.0/255.0, alpha: 1.0)
         let primaryColor = UIColor(red: 2.0/255.0, green: 132.0/255.0, blue: 199.0/255.0, alpha: 1.0)
+        let secondaryColor = UIColor(red: 148.0/255.0, green: 163.0/255.0, blue: 184.0/255.0, alpha: 1.0)
         
         return ShieldConfiguration(
-            backgroundStyle: .color(darkBg),
+            backgroundColor: darkBg,
             title: ShieldConfiguration.Label(
                 text: title,
                 color: primaryColor
@@ -50,7 +51,7 @@ public class ShieldConfigurationExtension: ShieldConfigurationDataSource {
             primaryButtonBackgroundColor: primaryColor,
             secondaryButtonLabel: ShieldConfiguration.Label(
                 text: "Unlock with Parent PIN",
-                color: UIColor(red: 148.0/255.0, green: 163.0/255.0, blue: 184.0/255.0, alpha: 1.0)
+                color: secondaryColor
             )
         )
     }

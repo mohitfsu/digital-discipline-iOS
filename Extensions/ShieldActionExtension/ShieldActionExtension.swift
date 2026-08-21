@@ -1,8 +1,7 @@
 import Foundation
 import ManagedSettings
-import UIKit
 
-/// Handles user actions on the system Shield screen with Dynamic Escalation and deep-link routing
+/// Handles user actions on the system Shield screen with Dynamic Escalation
 public class ShieldActionExtension: ShieldActionDelegate {
     
     public override func handle(
@@ -12,22 +11,11 @@ public class ShieldActionExtension: ShieldActionDelegate {
     ) {
         switch action {
         case .primaryButtonPressed:
-            // "⚡ Start 30s Physical Reset" or "Solve Brain Puzzle" tapped
-            // Dispatches deep link opening the app directly to Dynamic Escalation / Workout Hub
-            if let deepLinkURL = URL(string: "digitaldiscipline://exercise?action=escalated") {
-                Task { @MainActor in
-                    UIApplication.shared.open(deepLinkURL, options: [:], completionHandler: nil)
-                }
-            }
+            // "⚡ Start 30s Physical Reset" tapped -> Defers to main app to open Camera AI workout
             completionHandler(.deferToApplication)
             
         case .secondaryButtonPressed:
-            // "Unlock with Parent PIN" tapped
-            if let pinURL = URL(string: "digitaldiscipline://dashboard?action=pin") {
-                Task { @MainActor in
-                    UIApplication.shared.open(pinURL, options: [:], completionHandler: nil)
-                }
-            }
+            // "Unlock with Parent PIN" tapped -> Defers to main app PIN modal
             completionHandler(.deferToApplication)
             
         @unknown default:
@@ -40,12 +28,7 @@ public class ShieldActionExtension: ShieldActionDelegate {
         for webDomain: WebDomainToken,
         completionHandler: @escaping (ShieldActionResponse) -> Void
     ) {
-        if action == .primaryButtonPressed {
-            if let deepLinkURL = URL(string: "digitaldiscipline://exercise?action=escalated") {
-                Task { @MainActor in
-                    UIApplication.shared.open(deepLinkURL, options: [:], completionHandler: nil)
-                }
-            }
+        if action == .primaryButtonPressed || action == .secondaryButtonPressed {
             completionHandler(.deferToApplication)
         } else {
             completionHandler(.none)
@@ -57,12 +40,7 @@ public class ShieldActionExtension: ShieldActionDelegate {
         for category: ActivityCategoryToken,
         completionHandler: @escaping (ShieldActionResponse) -> Void
     ) {
-        if action == .primaryButtonPressed {
-            if let deepLinkURL = URL(string: "digitaldiscipline://exercise?action=escalated") {
-                Task { @MainActor in
-                    UIApplication.shared.open(deepLinkURL, options: [:], completionHandler: nil)
-                }
-            }
+        if action == .primaryButtonPressed || action == .secondaryButtonPressed {
             completionHandler(.deferToApplication)
         } else {
             completionHandler(.none)
