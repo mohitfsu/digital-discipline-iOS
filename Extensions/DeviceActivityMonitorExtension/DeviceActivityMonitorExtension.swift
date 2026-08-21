@@ -16,11 +16,17 @@ public class DeviceActivityMonitorExtension: DeviceActivityMonitor {
         clearShields()
     }
     
-    public override func eventDidReachThreshold(for activity: DeviceActivityName, event: DeviceActivityEvent.Name) {
+    public override func eventDidReachThreshold(for event: DeviceActivityEvent.Name, activity: DeviceActivityName) {
         applyStoredShields()
     }
     
     public override func intervalWillStartWarning(for activity: DeviceActivityName) {
+    }
+    
+    public override func intervalWillEndWarning(for activity: DeviceActivityName) {
+    }
+    
+    public override func eventWillReachThresholdWarning(for event: DeviceActivityEvent.Name, activity: DeviceActivityName) {
     }
     
     private func applyStoredShields() {
