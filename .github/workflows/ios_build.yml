@@ -41,29 +41,29 @@ jobs:
 
       - name: Package App and Extensions into Standard IPA
         run: |
-          # Find the actual compiled DigitalDiscipline.app directory
-          APP_PATH=$(find build_derived -name "DigitalDiscipline.app" -type d | head -n 1)
-          echo "Found compiled app at: $APP_PATH"
+          echo "=== Build Products Directory ==="
+          ls -la build_derived/Build/Products/Debug-iphoneos/
           
-          # Ensure PlugIns directory exists inside app bundle
-          mkdir -p "$APP_PATH/PlugIns"
+          mkdir -p output/Payload
+          cp -R build_derived/Build/Products/Debug-iphoneos/DigitalDiscipline.app output/Payload/
           
-          # Copy all compiled .appex extensions into PlugIns
-          find build_derived -name "*.appex" -type d | while read -r appex; do
-            echo "Embedding extension: $appex"
-            cp -R "$appex" "$APP_PATH/PlugIns/"
+          # Embed all extensions into PlugIns
+          mkdir -p output/Payload/DigitalDiscipline.app/PlugIns
+          for appex in build_derived/Build/Products/Debug-iphoneos/*.appex; do
+            if [ -d "$appex" ]; then
+              echo "Embedding extension: $appex"
+              cp -R "$appex" output/Payload/DigitalDiscipline.app/PlugIns/
+            fi
           done
           
-          # Construct standard iOS Payload structure
-          mkdir -p output/Payload
-          cp -R "$APP_PATH" output/Payload/
+          echo "=== Final App Size ==="
+          du -sh output/Payload/DigitalDiscipline.app
           
-          # Create final IPA
           cd output
           zip -r -9 DigitalDiscipline.ipa Payload
           cd ..
           
-          # Verify IPA size and contents
+          echo "=== Final IPA File Size ==="
           ls -lh output/DigitalDiscipline.ipa
 
       - name: Upload Ready-to-Install IPA to GitHub
