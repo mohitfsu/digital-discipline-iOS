@@ -26,41 +26,49 @@ jobs:
       - name: Generate Xcode Project
         run: xcodegen generate
 
-      - name: Archive Main App & Extensions
+      - name: Build Main App & Extensions for Physical Device
         run: |
           set -o pipefail
-          xcodebuild archive \
+          xcodebuild build \
             -project DigitalDiscipline.xcodeproj \
             -scheme DigitalDiscipline \
-            -destination 'generic/platform=iOS' \
-            -archivePath build_output/DigitalDiscipline.xcarchive \
+            -sdk iphoneos \
+            -configuration Debug \
             CODE_SIGNING_ALLOWED=NO \
             CODE_SIGNING_REQUIRED=NO \
             CODE_SIGN_IDENTITY="" \
-            ENABLE_USER_SCRIPT_SANDBOXING=NO
+            BUILD_DIR=build
 
       - name: Package App and Extensions into Standard IPA
         run: |
-          echo "=== Inspecting Archive Contents ==="
-          ls -la build_output/DigitalDiscipline.xcarchive/Products/Applications/
+          echo "=== Inspecting Build Output ==="
+          ls -la build/Debug-iphoneos/
           
-          # Copy real app from xcarchive into Payload
+          # Ensure PlugIns directory exists inside the app
+          mkdir -p build/Debug-iphoneos/DigitalDiscipline.app/PlugIns
+          
+          # Copy all extension .appex bundles into DigitalDiscipline.app/PlugIns/
+          for appex in build/Debug-iphoneos/*.appex; do
+            if [ -d "$appex" ]; then
+              echo "Embedding extension: $appex"
+              cp -R "$appex" build/Debug-iphoneos/DigitalDiscipline.app/PlugIns/
+            fi
+          done
+          
+          # Verify the Mach-O binary exists and check its size
+          echo "=== Executable Binary Info ==="
+          ls -lh build/Debug-iphoneos/DigitalDiscipline.app/DigitalDiscipline || true
+          
+          # Copy full app to Payload for IPA
           mkdir -p output/Payload
-          cp -R build_output/DigitalDiscipline.xcarchive/Products/Applications/DigitalDiscipline.app output/Payload/
+          cp -R build/Debug-iphoneos/DigitalDiscipline.app output/Payload/
           
-          # Inspect contents of the app bundle and binary size
-          echo "=== App Bundle Contents ==="
-          ls -la output/Payload/DigitalDiscipline.app
-          
-          echo "=== App Binary Size ==="
-          ls -lh output/Payload/DigitalDiscipline.app/DigitalDiscipline || true
-          
-          # Create final IPA
+          # Package into standard IPA
           cd output
           zip -r -9 DigitalDiscipline.ipa Payload
           cd ..
           
-          echo "=== Final IPA File Info ==="
+          echo "=== Final IPA Size ==="
           ls -lh output/DigitalDiscipline.ipa
 
       - name: Upload Ready-to-Install IPA to GitHub
