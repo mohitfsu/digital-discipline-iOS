@@ -18,7 +18,6 @@ jobs:
 
       - name: Verify Xcode Version
         run: |
-          ls -d /Applications/Xcode*
           xcodebuild -version
 
       - name: Install XcodeGen
@@ -29,6 +28,7 @@ jobs:
 
       - name: Build Main App & Extensions
         run: |
+          set -o pipefail
           xcodebuild build \
             -project DigitalDiscipline.xcodeproj \
             -scheme DigitalDiscipline \
