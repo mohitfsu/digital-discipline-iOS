@@ -4,7 +4,9 @@ import ManagedSettings
 /// Handles user actions on the system Shield screen with Dynamic Escalation
 public class ShieldActionExtension: ShieldActionDelegate {
     
-    public override func handle(
+    public init() {}
+    
+    public func handle(
         action: ShieldAction,
         for application: ApplicationToken,
         completionHandler: @escaping (ShieldActionResponse) -> Void
@@ -23,7 +25,7 @@ public class ShieldActionExtension: ShieldActionDelegate {
         }
     }
     
-    public override func handle(
+    public func handle(
         action: ShieldAction,
         for webDomain: WebDomainToken,
         completionHandler: @escaping (ShieldActionResponse) -> Void
@@ -35,7 +37,7 @@ public class ShieldActionExtension: ShieldActionDelegate {
         }
     }
     
-    public override func handle(
+    public func handle(
         action: ShieldAction,
         for category: ActivityCategoryToken,
         completionHandler: @escaping (ShieldActionResponse) -> Void
