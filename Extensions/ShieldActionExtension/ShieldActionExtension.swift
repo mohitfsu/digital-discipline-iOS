@@ -9,7 +9,14 @@ public class ShieldActionExtension: ShieldActionDelegate {
         for application: ApplicationToken,
         completionHandler: @escaping (ShieldActionResponse) -> Void
     ) {
-        completionHandler(.deferToApplication)
+        switch action {
+        case .primaryButtonPressed:
+            completionHandler(.close)
+        case .secondaryButtonPressed:
+            completionHandler(.close)
+        @unknown default:
+            completionHandler(.none)
+        }
     }
     
     public override func handle(
@@ -17,7 +24,11 @@ public class ShieldActionExtension: ShieldActionDelegate {
         for webDomain: WebDomainToken,
         completionHandler: @escaping (ShieldActionResponse) -> Void
     ) {
-        completionHandler(.deferToApplication)
+        if action == .primaryButtonPressed || action == .secondaryButtonPressed {
+            completionHandler(.close)
+        } else {
+            completionHandler(.none)
+        }
     }
     
     public override func handle(
@@ -25,6 +36,10 @@ public class ShieldActionExtension: ShieldActionDelegate {
         for category: ActivityCategoryToken,
         completionHandler: @escaping (ShieldActionResponse) -> Void
     ) {
-        completionHandler(.deferToApplication)
+        if action == .primaryButtonPressed || action == .secondaryButtonPressed {
+            completionHandler(.close)
+        } else {
+            completionHandler(.none)
+        }
     }
 }
