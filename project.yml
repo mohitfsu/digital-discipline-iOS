@@ -3,7 +3,6 @@ options:
   bundleIdPrefix: com.digitaldiscipline
   deploymentTarget:
     iOS: "16.0"
-  xcodeVersion: "15.0"
 
 settings:
   SWIFT_VERSION: "5.9"
