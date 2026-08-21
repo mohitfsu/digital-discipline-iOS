@@ -2,9 +2,11 @@ import Foundation
 import ManagedSettings
 
 /// Handles user actions on the system Shield screen with Dynamic Escalation
-public class ShieldActionExtension: ShieldActionDelegate {
+public class ShieldActionExtension: NSObject, ShieldActionDelegate {
     
-    public init() {}
+    public override init() {
+        super.init()
+    }
     
     public func handle(
         action: ShieldAction,
@@ -40,6 +42,32 @@ public class ShieldActionExtension: ShieldActionDelegate {
     public func handle(
         action: ShieldAction,
         for category: ActivityCategoryToken,
+        completionHandler: @escaping (ShieldActionResponse) -> Void
+    ) {
+        if action == .primaryButtonPressed || action == .secondaryButtonPressed {
+            completionHandler(.deferToApplication)
+        } else {
+            completionHandler(.none)
+        }
+    }
+    
+    public func handle(
+        action: ShieldAction,
+        for application: ApplicationToken,
+        in category: ActivityCategoryToken,
+        completionHandler: @escaping (ShieldActionResponse) -> Void
+    ) {
+        if action == .primaryButtonPressed || action == .secondaryButtonPressed {
+            completionHandler(.deferToApplication)
+        } else {
+            completionHandler(.none)
+        }
+    }
+    
+    public func handle(
+        action: ShieldAction,
+        for webDomain: WebDomainToken,
+        in category: ActivityCategoryToken,
         completionHandler: @escaping (ShieldActionResponse) -> Void
     ) {
         if action == .primaryButtonPressed || action == .secondaryButtonPressed {

@@ -35,6 +35,13 @@ targets:
       - target: DeviceActivityMonitorExtension
       - target: ShieldConfigurationExtension
       - target: ShieldActionExtension
+      - sdk: FamilyControls.framework
+      - sdk: DeviceActivity.framework
+      - sdk: ManagedSettings.framework
+      - sdk: CoreLocation.framework
+      - sdk: CoreMotion.framework
+      - sdk: AVFoundation.framework
+      - sdk: Vision.framework
 
   DeviceActivityMonitorExtension:
     type: app-extension
@@ -50,6 +57,10 @@ targets:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: com.digitaldiscipline.DigitalDiscipline.DeviceActivityMonitorExtension
         SKIP_INSTALL: "YES"
+    dependencies:
+      - sdk: DeviceActivity.framework
+      - sdk: ManagedSettings.framework
+      - sdk: FamilyControls.framework
 
   ShieldConfigurationExtension:
     type: app-extension
@@ -65,6 +76,9 @@ targets:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: com.digitaldiscipline.DigitalDiscipline.ShieldConfigurationExtension
         SKIP_INSTALL: "YES"
+    dependencies:
+      - sdk: ManagedSettings.framework
+      - sdk: ManagedSettingsUI.framework
 
   ShieldActionExtension:
     type: app-extension
@@ -80,3 +94,5 @@ targets:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: com.digitaldiscipline.DigitalDiscipline.ShieldActionExtension
         SKIP_INSTALL: "YES"
+    dependencies:
+      - sdk: ManagedSettings.framework
