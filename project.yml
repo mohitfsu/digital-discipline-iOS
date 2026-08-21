@@ -5,11 +5,15 @@ options:
     iOS: "16.0"
 
 settings:
-  SWIFT_VERSION: "5.9"
-  DEVELOPMENT_TEAM: ""
-  CODE_SIGNING_REQUIRED: "NO"
-  CODE_SIGN_IDENTITY: ""
-  CODE_SIGNING_ALLOWED: "NO"
+  base:
+    SWIFT_VERSION: "5.0"
+    DEVELOPMENT_TEAM: ""
+    CODE_SIGNING_REQUIRED: "NO"
+    CODE_SIGN_IDENTITY: ""
+    CODE_SIGNING_ALLOWED: "NO"
+    AD_HOC_CODE_SIGNING_ALLOWED: "YES"
+    ENABLE_USER_SCRIPT_SANDBOXING: "NO"
+    SWIFT_TREAT_WARNINGS_AS_ERRORS: "NO"
 
 targets:
   DigitalDiscipline:
@@ -24,6 +28,9 @@ targets:
       path: App/Info.plist
     entitlements:
       path: App/DigitalDiscipline.entitlements
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.digitaldiscipline.DigitalDiscipline
     dependencies:
       - target: DeviceActivityMonitorExtension
       - target: ShieldConfigurationExtension
@@ -39,6 +46,9 @@ targets:
       path: Extensions/DeviceActivityMonitorExtension/Info.plist
     entitlements:
       path: Extensions/DeviceActivityMonitorExtension/DeviceActivityMonitorExtension.entitlements
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.digitaldiscipline.DigitalDiscipline.DeviceActivityMonitorExtension
 
   ShieldConfigurationExtension:
     type: app-extension
@@ -50,6 +60,9 @@ targets:
       path: Extensions/ShieldConfigurationExtension/Info.plist
     entitlements:
       path: Extensions/ShieldConfigurationExtension/ShieldConfigurationExtension.entitlements
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.digitaldiscipline.DigitalDiscipline.ShieldConfigurationExtension
 
   ShieldActionExtension:
     type: app-extension
@@ -61,3 +74,6 @@ targets:
       path: Extensions/ShieldActionExtension/Info.plist
     entitlements:
       path: Extensions/ShieldActionExtension/ShieldActionExtension.entitlements
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.digitaldiscipline.DigitalDiscipline.ShieldActionExtension

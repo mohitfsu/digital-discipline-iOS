@@ -28,8 +28,7 @@ jobs:
 
       - name: Build Main App & Extensions
         run: |
-          set -o pipefail
-          xcodebuild build \
+          xcodebuild \
             -project DigitalDiscipline.xcodeproj \
             -scheme DigitalDiscipline \
             -destination 'generic/platform=iOS' \
@@ -37,7 +36,8 @@ jobs:
             CODE_SIGNING_ALLOWED=NO \
             CODE_SIGNING_REQUIRED=NO \
             CODE_SIGN_IDENTITY="" \
-            BUILD_DIR=build
+            BUILD_DIR=build \
+            COMPILER_INDEX_STORE_ENABLE=NO
 
       - name: Package App Bundle into Zip
         run: |
