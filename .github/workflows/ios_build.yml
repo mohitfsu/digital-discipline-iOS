@@ -28,6 +28,7 @@ jobs:
 
       - name: Archive Main App & Extensions
         run: |
+          set -o pipefail
           xcodebuild archive \
             -project DigitalDiscipline.xcodeproj \
             -scheme DigitalDiscipline \
@@ -36,7 +37,7 @@ jobs:
             CODE_SIGNING_ALLOWED=NO \
             CODE_SIGNING_REQUIRED=NO \
             CODE_SIGN_IDENTITY="" \
-            2>&1 | tee build_log.txt || (echo "=== ARCHIVE ERRORS ===" && grep -E "error:" build_log.txt && exit 1)
+            ENABLE_USER_SCRIPT_SANDBOXING=NO
 
       - name: Package App and Extensions into Standard IPA
         run: |

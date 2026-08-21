@@ -9,9 +9,8 @@ settings:
     SWIFT_VERSION: "5.0"
     DEVELOPMENT_TEAM: ""
     CODE_SIGNING_REQUIRED: "NO"
-    CODE_SIGN_IDENTITY: "-"
-    CODE_SIGNING_ALLOWED: "YES"
-    AD_HOC_CODE_SIGNING_ALLOWED: "YES"
+    CODE_SIGN_IDENTITY: ""
+    CODE_SIGNING_ALLOWED: "NO"
     ENABLE_USER_SCRIPT_SANDBOXING: "NO"
     SWIFT_TREAT_WARNINGS_AS_ERRORS: "NO"
 
@@ -31,8 +30,7 @@ targets:
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: com.digitaldiscipline.DigitalDiscipline
-        CODE_SIGN_IDENTITY: "-"
-        CODE_SIGNING_ALLOWED: "YES"
+        SKIP_INSTALL: "NO"
     dependencies:
       - target: DeviceActivityMonitorExtension
       - target: ShieldConfigurationExtension
@@ -51,8 +49,7 @@ targets:
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: com.digitaldiscipline.DigitalDiscipline.DeviceActivityMonitorExtension
-        CODE_SIGN_IDENTITY: "-"
-        CODE_SIGNING_ALLOWED: "YES"
+        SKIP_INSTALL: "YES"
 
   ShieldConfigurationExtension:
     type: app-extension
@@ -67,8 +64,7 @@ targets:
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: com.digitaldiscipline.DigitalDiscipline.ShieldConfigurationExtension
-        CODE_SIGN_IDENTITY: "-"
-        CODE_SIGNING_ALLOWED: "YES"
+        SKIP_INSTALL: "YES"
 
   ShieldActionExtension:
     type: app-extension
@@ -83,5 +79,4 @@ targets:
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: com.digitaldiscipline.DigitalDiscipline.ShieldActionExtension
-        CODE_SIGN_IDENTITY: "-"
-        CODE_SIGNING_ALLOWED: "YES"
+        SKIP_INSTALL: "YES"
