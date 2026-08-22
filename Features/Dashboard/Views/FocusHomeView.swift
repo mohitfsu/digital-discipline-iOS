@@ -1,7 +1,7 @@
 import SwiftUI
 import FamilyControls
 
-/// Rewired/Opal-style Hero Focus Screen with central status dial, Dopamine Wallet, and Urge Surfing
+/// Master Dark OLED TodayScreen & Daily Friction Dashboard
 public struct FocusHomeView: View {
     @ObservedObject var shieldManager = ShieldManager.shared
     @ObservedObject var dataStore = SharedDataStore.shared
@@ -11,52 +11,53 @@ public struct FocusHomeView: View {
     @State private var isPickerPresented = false
     @State private var isWorkoutModalPresented = false
     @State private var isUrgeModalPresented = false
+    @State private var isZenEnsoPresented = false
     @State private var selectedInterventionToRun: InterventionType = .pushUps
+    @State private var selectedCategoryFilter: String = "ALL"
     
     public init() {}
     
     public var body: some View {
         NavigationStack {
             ZStack {
-                DisciplineTheme.background.ignoresSafeArea()
+                Color.ddBgDeep.ignoresSafeArea()
                 
                 ScrollView {
-                    VStack(spacing: 20) {
-                        // Header Profile Bar
-                        headerProfileBar
+                    VStack(spacing: 22) {
+                        // Top Bar: User Profile, Streak Counter (🔥 7 Days), Mode
+                        topStatusBar
                         
-                        // Hero Focus Status Dial
-                        heroFocusDial
+                        // Hero Card: TimeDialProgressView + Quick Earn Action Pill
+                        heroTimeDialCard
                         
                         // 🔥 Viral "I AM HAVING AN URGE" Panic Button
                         urgeSurfingHeroButton
                         
-                        // 💰 Earned Dopamine Wallet Card
-                        dopamineWalletCard
-                        
-                        // Active Temporary Pass Banner (if unlocked)
+                        // Active Temporary Pass Countdown (if unlocked)
                         if dataStore.isTemporaryUnlockActive() {
                             activeTemporaryPassCard
                         } else {
-                            // Quick 5-Min Pass Action Card
                             quickFrictionUnlockCard
                         }
                         
-                        // Action / Shield Controller
-                        shieldControlActions
+                        // Shield Control Action (Enforced / Protected status)
+                        shieldStatusBanner
                         
-                        // Stats Overview Row
-                        statsOverviewRow
+                        // Daily Summary Metrics
+                        metricsSummaryRow
                         
-                        // Shielded Apps Mini Grid
-                        shieldedAppsSummaryCard
+                        // Target Shielded Apps with Real Icons
+                        shieldedAppsGrid
+                        
+                        // Intervention Categories & Quick Resets
+                        interventionCategoryExplorer
                     }
                     .padding(.horizontal, 20)
                     .padding(.top, 12)
                     .padding(.bottom, 32)
                 }
             }
-            .navigationTitle("Dopamine & Focus")
+            .navigationTitle("Today")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .topBarTrailing) {
@@ -65,7 +66,7 @@ public struct FocusHomeView: View {
                     } label: {
                         Image(systemName: "plus.app")
                             .font(.system(size: 16, weight: .bold))
-                            .foregroundColor(DisciplineTheme.accent)
+                            .foregroundColor(Color.ddAccentSky)
                     }
                 }
             }
@@ -82,100 +83,83 @@ public struct FocusHomeView: View {
             .fullScreenCover(isPresented: $isUrgeModalPresented) {
                 UrgeSurfingModalView()
             }
+            .fullScreenCover(isPresented: $isZenEnsoPresented) {
+                ZenEnsoCanvasView(
+                    unlockDurationMinutes: dataStore.activeProfile.temporaryUnlockMinutes
+                )
+            }
         }
     }
     
-    // MARK: - Header Profile Bar
-    private var headerProfileBar: some View {
+    // MARK: - Top Status Bar
+    private var topStatusBar: some View {
         HStack(spacing: 12) {
-            Image(systemName: dataStore.activeProfile.type.iconName)
-                .font(.system(size: 16, weight: .bold))
-                .foregroundColor(DisciplineTheme.accent)
-                .padding(8)
-                .background(DisciplineTheme.accent.opacity(0.15))
-                .clipShape(Circle())
-            
-            VStack(alignment: .leading, spacing: 2) {
-                Text(dataStore.activeProfile.name)
-                    .font(.system(size: 15, weight: .bold))
-                    .foregroundColor(.white)
-                Text(shieldManager.isShieldCurrentlyActive ? "Shielding Active • Friction Required" : "Ready to Focus")
-                    .font(.system(size: 11, weight: .medium))
-                    .foregroundColor(DisciplineTheme.textSecondary)
+            // Mode Badge
+            HStack(spacing: 6) {
+                Circle()
+                    .fill(Color.ddAccentEmerald)
+                    .frame(width: 8, height: 8)
+                Text(dataStore.activeProfile.name.uppercased())
+                    .font(.system(size: 10, weight: .bold, design: .monospaced))
+                    .foregroundColor(Color.ddAccentSky)
             }
+            .padding(.horizontal, 10)
+            .padding(.vertical, 6)
+            .background(Color.ddBgSubtle)
+            .cornerRadius(20)
             
             Spacer()
             
-            NavigationLink {
-                ProfileSwitcherCardView()
-                    .padding()
-                    .background(DisciplineTheme.background)
-            } label: {
-                Text("Switch")
-                    .font(.system(size: 12, weight: .bold))
-                    .foregroundColor(DisciplineTheme.accent)
-                    .padding(.horizontal, 12)
-                    .padding(.vertical, 6)
-                    .background(DisciplineTheme.surfaceSecondary)
-                    .cornerRadius(20)
+            // 🔥 Streak Badge
+            HStack(spacing: 4) {
+                Text("🔥")
+                Text("7 Days")
+                    .font(.system(size: 12, weight: .bold, design: .rounded))
+                    .foregroundColor(Color.ddAccentAmber)
             }
+            .padding(.horizontal, 10)
+            .padding(.vertical, 6)
+            .background(Color.ddBgSubtle)
+            .cornerRadius(20)
         }
-        .padding(12)
-        .background(DisciplineTheme.surface)
-        .cornerRadius(16)
     }
     
-    // MARK: - Hero Focus Dial
-    private var heroFocusDial: some View {
-        ZStack {
-            // Outer Glow
-            Circle()
-                .fill(shieldManager.isShieldCurrentlyActive ? DisciplineTheme.primary.opacity(0.15) : Color.white.opacity(0.03))
-                .frame(width: 240, height: 240)
-                .blur(radius: 20)
+    // MARK: - Hero Time Dial Card
+    private var heroTimeDialCard: some View {
+        VStack(spacing: 18) {
+            TimeDialProgressView(
+                availableSeconds: wallet.availableSeconds,
+                maxSeconds: 3600,
+                isSessionActive: dataStore.isTemporaryUnlockActive()
+            )
             
-            // Outer Track
-            Circle()
-                .stroke(DisciplineTheme.surfaceSecondary, lineWidth: 14)
-                .frame(width: 200, height: 200)
-            
-            // Active Progress Ring
-            Circle()
-                .trim(from: 0, to: shieldManager.isShieldCurrentlyActive ? 1.0 : 0.0)
-                .stroke(
-                    LinearGradient(
-                        colors: [DisciplineTheme.primary, DisciplineTheme.accent],
-                        startPoint: .topLeading,
-                        endPoint: .bottomTrailing
-                    ),
-                    style: StrokeStyle(lineWidth: 14, lineCap: .round)
-                )
-                .frame(width: 200, height: 200)
-                .rotationEffect(.degrees(-90))
-                .animation(.spring(response: 0.8, dampingFraction: 0.7), value: shieldManager.isShieldCurrentlyActive)
-            
-            // Center Information
-            VStack(spacing: 6) {
-                Image(systemName: shieldManager.isShieldCurrentlyActive ? "shield.fill" : "shield.slash")
-                    .font(.system(size: 34, weight: .bold))
-                    .foregroundColor(shieldManager.isShieldCurrentlyActive ? DisciplineTheme.accent : DisciplineTheme.textSecondary)
-                
-                Text(shieldManager.isShieldCurrentlyActive ? "PROTECTED" : "UNSHIELDED")
-                    .font(.system(size: 13, weight: .black, design: .monospaced))
-                    .foregroundColor(.white)
-                
-                if dataStore.isTemporaryUnlockActive() {
-                    Text("\(dataStore.remainingUnlockSeconds() / 60)m Remaining")
-                        .font(.system(size: 11, weight: .bold, design: .monospaced))
-                        .foregroundColor(DisciplineTheme.warning)
-                } else {
-                    Text("\(shieldManager.activitySelection.applicationTokens.count) Apps Blocked")
-                        .font(.system(size: 11, weight: .medium))
-                        .foregroundColor(DisciplineTheme.textSecondary)
+            // Quick Action Pill: + Earn 10 Mins Now
+            Button {
+                selectedInterventionToRun = .pushUps
+                isWorkoutModalPresented = true
+                HapticFeedbackManager.shared.buttonTap()
+            } label: {
+                HStack(spacing: 6) {
+                    Image(systemName: "plus.circle.fill")
+                        .font(.system(size: 14))
+                    Text("+ Earn \(dataStore.activeProfile.temporaryUnlockMinutes) Mins Now")
+                        .font(.system(size: 13, weight: .bold, design: .rounded))
                 }
+                .foregroundColor(.white)
+                .padding(.horizontal, 18)
+                .padding(.vertical, 10)
+                .background(
+                    LinearGradient(
+                        colors: [Color.ddAccentSky, Color(hex: "0284C7")],
+                        startPoint: .leading,
+                        endPoint: .trailing
+                    )
+                )
+                .cornerRadius(20)
+                .shadow(color: Color.ddAccentSkyGlow.opacity(0.35), radius: 8)
             }
         }
-        .padding(.vertical, 8)
+        .padding(.vertical, 10)
     }
     
     // MARK: - Viral Urge Surfing Button
@@ -187,20 +171,20 @@ public struct FocusHomeView: View {
             HStack(spacing: 14) {
                 ZStack {
                     Circle()
-                        .fill(Color(hex: "F97316"))
+                        .fill(Color.ddAccentAmber)
                         .frame(width: 44, height: 44)
                     Image(systemName: "exclamationmark.triangle.fill")
                         .font(.system(size: 20))
-                        .foregroundColor(.white)
+                        .foregroundColor(.black)
                 }
                 
                 VStack(alignment: .leading, spacing: 2) {
                     Text("I AM HAVING AN URGE")
                         .font(.system(size: 14, weight: .black, design: .monospaced))
                         .foregroundColor(.white)
-                    Text("Ride the 60s craving wave $\\rightarrow$ Earn +500 XP & +5m Pass")
+                    Text("Ride the 60s craving wave $\\rightarrow$ Earn +5m Pass")
                         .font(.system(size: 11))
-                        .foregroundColor(Color(hex: "FDBA74"))
+                        .foregroundColor(Color.ddAccentAmber)
                 }
                 
                 Spacer()
@@ -210,51 +194,14 @@ public struct FocusHomeView: View {
                     .foregroundColor(.white)
             }
             .padding(14)
-            .background(
-                LinearGradient(
-                    colors: [Color(hex: "C2410C"), Color(hex: "EA580C")],
-                    startPoint: .leading,
-                    endPoint: .trailing
-                )
-            )
+            .background(Color.ddBgCard)
             .cornerRadius(16)
-            .shadow(color: Color(hex: "EA580C").opacity(0.4), radius: 10, y: 3)
+            .overlay(
+                RoundedRectangle(cornerRadius: 16)
+                    .stroke(Color.ddAccentAmber.opacity(0.5), lineWidth: 1.5)
+            )
+            .shadow(color: Color.ddAccentAmber.opacity(0.15), radius: 10)
         }
-    }
-    
-    // MARK: - Dopamine Wallet Card
-    private var dopamineWalletCard: some View {
-        HStack(spacing: 16) {
-            VStack(alignment: .leading, spacing: 4) {
-                Text("EARNED TIME WALLET")
-                    .font(.system(size: 9, weight: .bold, design: .monospaced))
-                    .foregroundColor(DisciplineTheme.accent)
-                Text("\(wallet.availableMinutes) MIN AVAILABLE")
-                    .font(.system(size: 18, weight: .black, design: .rounded))
-                    .foregroundColor(.white)
-                Text("Daily Earn Cap: \(wallet.dailyEarnedSeconds / 60)/60 min")
-                    .font(.system(size: 11))
-                    .foregroundColor(DisciplineTheme.textSecondary)
-            }
-            
-            Spacer()
-            
-            ZStack {
-                Circle()
-                    .fill(DisciplineTheme.accent.opacity(0.15))
-                    .frame(width: 50, height: 50)
-                Image(systemName: "banknote.fill")
-                    .font(.system(size: 22))
-                    .foregroundColor(DisciplineTheme.accent)
-            }
-        }
-        .padding(16)
-        .background(DisciplineTheme.surface)
-        .cornerRadius(16)
-        .overlay(
-            RoundedRectangle(cornerRadius: 16)
-                .stroke(DisciplineTheme.surfaceSecondary, lineWidth: 1)
-        )
     }
     
     // MARK: - Active Temporary Pass Card
@@ -262,12 +209,12 @@ public struct FocusHomeView: View {
         VStack(spacing: 12) {
             HStack {
                 VStack(alignment: .leading, spacing: 2) {
-                    Text("PASS ACTIVE")
+                    Text("FOCUS PASS ACTIVE")
                         .font(.system(size: 9, weight: .bold, design: .monospaced))
-                        .foregroundColor(DisciplineTheme.warning)
+                        .foregroundColor(Color.ddAccentAmber)
                     Text("\(dataStore.remainingUnlockSeconds() / 60)m \(dataStore.remainingUnlockSeconds() % 60)s Remaining")
-                        .font(.system(size: 16, weight: .bold))
-                        .foregroundColor(.white)
+                        .font(.system(size: 16, weight: .bold, design: .rounded))
+                        .foregroundColor(.ddTextPrimary)
                 }
                 Spacer()
                 
@@ -277,15 +224,14 @@ public struct FocusHomeView: View {
                 } label: {
                     Text("Re-Lock Now")
                         .font(.system(size: 11, weight: .bold))
-                        .foregroundColor(DisciplineTheme.danger)
+                        .foregroundColor(Color.ddAccentRose)
                         .padding(.horizontal, 10)
                         .padding(.vertical, 6)
-                        .background(DisciplineTheme.danger.opacity(0.15))
+                        .background(Color.ddAccentRose.opacity(0.15))
                         .cornerRadius(8)
                 }
             }
             
-            // Open Instagram / Apps Button
             Button {
                 if let url = URL(string: "instagram://") {
                     if UIApplication.shared.canOpenURL(url) {
@@ -312,11 +258,11 @@ public struct FocusHomeView: View {
             }
         }
         .padding(14)
-        .background(DisciplineTheme.surface)
+        .background(Color.ddBgCard)
         .cornerRadius(16)
         .overlay(
             RoundedRectangle(cornerRadius: 16)
-                .stroke(DisciplineTheme.warning.opacity(0.4), lineWidth: 1)
+                .stroke(Color.ddAccentAmber.opacity(0.4), lineWidth: 1)
         )
     }
     
@@ -345,174 +291,214 @@ public struct FocusHomeView: View {
                 
                 VStack(alignment: .leading, spacing: 2) {
                     Text("Need to Open Instagram?")
-                        .font(.system(size: 14, weight: .bold))
-                        .foregroundColor(.white)
+                        .font(.system(size: 14, weight: .bold, design: .rounded))
+                        .foregroundColor(.ddTextPrimary)
                     Text("Do 10 Push-ups / 30s Reset $\\rightarrow$ Earn \(dataStore.activeProfile.temporaryUnlockMinutes)m Pass")
                         .font(.system(size: 11))
-                        .foregroundColor(DisciplineTheme.textSecondary)
+                        .foregroundColor(Color.ddTextSecondary)
                 }
                 
                 Spacer()
                 
                 Image(systemName: "play.circle.fill")
                     .font(.system(size: 24))
-                    .foregroundColor(DisciplineTheme.accent)
+                    .foregroundColor(Color.ddAccentSky)
             }
             .padding(14)
-            .background(DisciplineTheme.surface)
+            .background(Color.ddBgCard)
             .cornerRadius(16)
             .overlay(
                 RoundedRectangle(cornerRadius: 16)
-                    .stroke(DisciplineTheme.accent.opacity(0.3), lineWidth: 1)
+                    .stroke(Color.ddBorderDefault, lineWidth: 1)
             )
         }
     }
     
-    // MARK: - Shield Control Actions
-    private var shieldControlActions: some View {
-        Button {
-            withAnimation(.spring(response: 0.4, dampingFraction: 0.8)) {
-                if shieldManager.isShieldCurrentlyActive {
-                    shieldManager.clearShields()
-                } else {
-                    shieldManager.enforceShields()
-                }
-            }
-            HapticFeedbackManager.shared.profileSwitched()
-        } label: {
-            HStack(spacing: 10) {
-                Image(systemName: shieldManager.isShieldCurrentlyActive ? "pause.fill" : "lock.fill")
-                    .font(.system(size: 15, weight: .bold))
-                Text(shieldManager.isShieldCurrentlyActive ? "Pause Focus Shield" : "Activate Focus Shield")
-                    .font(.system(size: 15, weight: .bold))
-            }
-            .foregroundColor(.white)
-            .frame(maxWidth: .infinity)
-            .padding(.vertical, 14)
-            .background(
-                shieldManager.isShieldCurrentlyActive ?
-                LinearGradient(colors: [Color(hex: "334155"), Color(hex: "1E293B")], startPoint: .top, endPoint: .bottom) :
-                LinearGradient(colors: [DisciplineTheme.primary, Color(hex: "0284C7")], startPoint: .topLeading, endPoint: .bottomTrailing)
-            )
-            .cornerRadius(14)
-            .shadow(color: shieldManager.isShieldCurrentlyActive ? Color.clear : DisciplineTheme.primary.opacity(0.35), radius: 10, y: 4)
-        }
-    }
-    
-    // MARK: - Stats Overview Row
-    private var statsOverviewRow: some View {
+    // MARK: - Shield Status Banner
+    private var shieldStatusBanner: some View {
         HStack(spacing: 12) {
-            statCard(
-                title: "BLOCKS TODAY",
-                value: "\(dataStore.blockAttemptsCount)",
-                icon: "hand.raised.fill",
-                color: DisciplineTheme.danger
-            )
-            
-            statCard(
-                title: "RESETS DONE",
-                value: "\(dataStore.totalSquatReps + dataStore.totalBreathingSessions)",
-                icon: "flame.fill",
-                color: DisciplineTheme.warning
-            )
-            
-            statCard(
-                title: "DISCIPLINE",
-                value: "\(max(0, 100 - (dataStore.dailyUnlockCount * 5)))%",
-                icon: "bolt.fill",
-                color: DisciplineTheme.accent
-            )
+            Image(systemName: "shield.fill")
+                .foregroundColor(Color.ddAccentEmerald)
+            Text("PROTECTED • \(dataStore.shieldedTargetAppNames.count) Apps Shielded")
+                .font(.system(size: 12, weight: .bold, design: .monospaced))
+                .foregroundColor(.ddTextPrimary)
+            Spacer()
+            Text("ACTIVE")
+                .font(.system(size: 10, weight: .black, design: .monospaced))
+                .foregroundColor(Color.ddAccentEmerald)
+                .padding(.horizontal, 8)
+                .padding(.vertical, 4)
+                .background(Color.ddAccentEmerald.opacity(0.15))
+                .cornerRadius(6)
+        }
+        .padding(12)
+        .background(Color.ddBgCard)
+        .cornerRadius(12)
+    }
+    
+    // MARK: - Metrics Summary Row
+    private var metricsSummaryRow: some View {
+        HStack(spacing: 10) {
+            metricCard(title: "BLOCKS", value: "\(dataStore.blockAttemptsCount)", icon: "hand.raised.fill", color: Color.ddAccentRose)
+            metricCard(title: "RESETS", value: "\(dataStore.totalSquatReps + dataStore.totalBreathingSessions)", icon: "flame.fill", color: Color.ddAccentAmber)
+            metricCard(title: "SCORE", value: "\(max(0, 100 - (dataStore.dailyUnlockCount * 5)))", icon: "bolt.fill", color: Color.ddAccentSky)
         }
     }
     
-    private func statCard(title: String, value: String, icon: String, color: Color) -> some View {
-        VStack(alignment: .leading, spacing: 6) {
-            HStack {
-                Image(systemName: icon)
-                    .font(.system(size: 12, weight: .bold))
-                    .foregroundColor(color)
-                Spacer()
-            }
+    private func metricCard(title: String, value: String, icon: String, color: Color) -> some View {
+        VStack(alignment: .leading, spacing: 4) {
+            Image(systemName: icon)
+                .font(.system(size: 12))
+                .foregroundColor(color)
             Text(value)
-                .font(.system(size: 20, weight: .heavy, design: .rounded))
-                .foregroundColor(.white)
+                .font(.system(size: 20, weight: .black, design: .rounded))
+                .foregroundColor(.ddTextPrimary)
             Text(title)
                 .font(.system(size: 9, weight: .bold, design: .monospaced))
-                .foregroundColor(DisciplineTheme.textSecondary)
+                .foregroundColor(Color.ddTextSecondary)
         }
         .padding(12)
         .frame(maxWidth: .infinity, alignment: .leading)
-        .background(DisciplineTheme.surface)
-        .cornerRadius(14)
-        .overlay(
-            RoundedRectangle(cornerRadius: 14)
-                .stroke(DisciplineTheme.surfaceSecondary, lineWidth: 1)
-        )
+        .background(Color.ddBgCard)
+        .cornerRadius(12)
     }
     
-    // MARK: - Shielded Apps Summary Card
-    private var shieldedAppsSummaryCard: some View {
-        VStack(alignment: .leading, spacing: 12) {
-            HStack {
-                Text("SHIELDED TARGETS")
-                    .font(.system(size: 10, weight: .bold, design: .monospaced))
-                    .foregroundColor(DisciplineTheme.textSecondary)
-                
-                Spacer()
-                
-                Button {
-                    isPickerPresented = true
-                } label: {
-                    Text("Edit Apps")
-                        .font(.system(size: 12, weight: .bold))
-                        .foregroundColor(DisciplineTheme.accent)
-                }
-            }
+    // MARK: - Shielded Apps Grid
+    private var shieldedAppsGrid: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            Text("SHIELDED TARGET APPS")
+                .font(.system(size: 10, weight: .bold, design: .monospaced))
+                .foregroundColor(Color.ddTextSecondary)
             
-            if shieldManager.activitySelection.applicationTokens.isEmpty && shieldManager.activitySelection.categoryTokens.isEmpty {
-                HStack(spacing: 12) {
-                    Image(systemName: "apps.iphone")
-                        .font(.system(size: 24))
-                        .foregroundColor(DisciplineTheme.textSecondary)
-                    
-                    VStack(alignment: .leading, spacing: 2) {
-                        Text("No Apps Selected")
-                            .font(.system(size: 13, weight: .bold))
-                            .foregroundColor(.white)
-                        Text("Tap 'Edit Apps' to block YouTube, Instagram, or TikTok.")
-                            .font(.system(size: 11))
-                            .foregroundColor(DisciplineTheme.textSecondary)
+            ScrollView(.horizontal, showsIndicators: false) {
+                HStack(spacing: 10) {
+                    ForEach(dataStore.shieldedTargetAppNames, id: \.self) { appName in
+                        HStack(spacing: 8) {
+                            Circle()
+                                .fill(Color.ddAccentSky.opacity(0.2))
+                                .frame(width: 24, height: 24)
+                                .overlay(
+                                    Image(systemName: appIconName(for: appName))
+                                        .font(.system(size: 10))
+                                        .foregroundColor(Color.ddAccentSky)
+                                )
+                            Text(appName)
+                                .font(.system(size: 12, weight: .bold))
+                                .foregroundColor(.ddTextPrimary)
+                        }
+                        .padding(.horizontal, 12)
+                        .padding(.vertical, 8)
+                        .background(Color.ddBgCard)
+                        .cornerRadius(10)
+                        .overlay(
+                            RoundedRectangle(cornerRadius: 10)
+                                .stroke(Color.ddBorderDefault, lineWidth: 1)
+                        )
                     }
-                }
-                .padding(.vertical, 6)
-            } else {
-                HStack(spacing: 16) {
-                    HStack(spacing: 6) {
-                        Image(systemName: "app.badge.checkmark.fill")
-                            .foregroundColor(DisciplineTheme.success)
-                        Text("\(shieldManager.activitySelection.applicationTokens.count) Apps")
-                            .font(.system(size: 13, weight: .bold))
-                            .foregroundColor(.white)
-                    }
-                    
-                    HStack(spacing: 6) {
-                        Image(systemName: "folder.badge.gearshape")
-                            .foregroundColor(DisciplineTheme.accent)
-                        Text("\(shieldManager.activitySelection.categoryTokens.count) Categories")
-                            .font(.system(size: 13, weight: .bold))
-                            .foregroundColor(.white)
-                    }
-                    
-                    Spacer()
                 }
             }
         }
-        .padding(16)
-        .background(DisciplineTheme.surface)
-        .cornerRadius(16)
-        .overlay(
-            RoundedRectangle(cornerRadius: 16)
-                .stroke(DisciplineTheme.surfaceSecondary, lineWidth: 1)
-        )
+    }
+    
+    private func appIconName(for name: String) -> String {
+        switch name {
+        case "Instagram": return "camera.fill"
+        case "TikTok": return "play.tv.fill"
+        case "YouTube": return "play.rectangle.fill"
+        case "Twitter / X": return "message.fill"
+        case "Reddit": return "bubble.left.fill"
+        case "Snapchat": return "ghost.fill"
+        case "Games": return "gamecontroller.fill"
+        case "Netflix": return "film.fill"
+        default: return "apps.iphone"
+        }
+    }
+    
+    // MARK: - Intervention Category Explorer
+    private var interventionCategoryExplorer: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            Text("43 ACTIVE NEURO-CHALLENGES")
+                .font(.system(size: 10, weight: .bold, design: .monospaced))
+                .foregroundColor(Color.ddTextSecondary)
+            
+            VStack(spacing: 8) {
+                challengeRow(
+                    emoji: "🏋️",
+                    title: "10 AI Push-ups",
+                    desc: "Vision AI form & chest-to-ground tracking",
+                    badge: "+5 Mins",
+                    action: {
+                        selectedInterventionToRun = .pushUps
+                        isWorkoutModalPresented = true
+                    }
+                )
+                
+                challengeRow(
+                    emoji: "🧘",
+                    title: "30s Balasana Child's Pose",
+                    desc: "Instant pause anti-cheat fold hold",
+                    badge: "+5 Mins",
+                    action: {
+                        selectedInterventionToRun = .childPose
+                        isWorkoutModalPresented = true
+                    }
+                )
+                
+                challengeRow(
+                    emoji: "🎨",
+                    title: "Zen Enso Circle",
+                    desc: "Continuous single-stroke mindfulness canvas",
+                    badge: "+5 Mins",
+                    action: {
+                        isZenEnsoPresented = true
+                    }
+                )
+                
+                challengeRow(
+                    emoji: "🫁",
+                    title: "4-7-8 Deep Sleep & Calm",
+                    desc: "4s Inhale • 7s Hold • 8s Exhale cycle",
+                    badge: "+5 Mins",
+                    action: {
+                        selectedInterventionToRun = .boxBreathing
+                        isWorkoutModalPresented = true
+                    }
+                )
+            }
+        }
+    }
+    
+    private func challengeRow(emoji: String, title: String, desc: String, badge: String, action: @escaping () -> Void) -> some View {
+        Button(action: {
+            HapticFeedbackManager.shared.buttonTap()
+            action()
+        }) {
+            HStack(spacing: 12) {
+                Text(emoji).font(.system(size: 22))
+                VStack(alignment: .leading, spacing: 2) {
+                    Text(title)
+                        .font(.system(size: 14, weight: .bold, design: .rounded))
+                        .foregroundColor(.ddTextPrimary)
+                    Text(desc)
+                        .font(.system(size: 11))
+                        .foregroundColor(Color.ddTextSecondary)
+                }
+                Spacer()
+                Text(badge)
+                    .font(.system(size: 11, weight: .bold, design: .monospaced))
+                    .foregroundColor(Color.ddAccentSky)
+                    .padding(.horizontal, 8)
+                    .padding(.vertical, 4)
+                    .background(Color.ddAccentSky.opacity(0.15))
+                    .cornerRadius(6)
+            }
+            .padding(14)
+            .background(Color.ddBgCard)
+            .cornerRadius(14)
+            .overlay(
+                RoundedRectangle(cornerRadius: 14)
+                    .stroke(Color.ddBorderDefault, lineWidth: 1)
+            )
+        }
     }
 }

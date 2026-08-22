@@ -32,11 +32,17 @@ public final class SharedDataStore: ObservableObject {
         }
     }
     
+    @Published public var shieldedTargetAppNames: [String] = ["Instagram", "TikTok", "YouTube"] {
+        didSet {
+            defaults?.set(shieldedTargetAppNames, forKey: "digitaldiscipline.shielded_app_names")
+        }
+    }
+    
     @Published public var totalSquatReps: Int = 0
     @Published public var totalBreathingSessions: Int = 0
     @Published public var blockAttemptsCount: Int = 0
     @Published public var dailyUnlockCount: Int = 0
-    @Published public var isShieldEnforced: Bool = false
+    @Published public var isShieldEnforced: Bool = true
     @Published public var isAntiTamperEnabled: Bool = true
     
     private init() {
@@ -50,16 +56,16 @@ public final class SharedDataStore: ObservableObject {
             description: "Break doomscrolling loops with 30s physical and mindful friction.",
             unlockType: .squats,
             requiredSquatReps: 10,
-            temporaryUnlockMinutes: 10,
+            temporaryUnlockMinutes: 5,
             isStrictAntiTamperEnabled: false,
             schedules: [
                 ScheduleModel(
                     title: "Focus Hours",
                     startHour: 9,
                     startMinute: 0,
-                    endHour: 18,
+                    endHour: 22,
                     endMinute: 0,
-                    daysOfWeekBitmask: 0b0111110, // Mon-Fri
+                    daysOfWeekBitmask: 0b1111111, // Every day
                     isEnabled: true
                 )
             ]
@@ -73,6 +79,10 @@ public final class SharedDataStore: ObservableObject {
         guard let defaults = defaults else { return }
         
         self.hasCompletedOnboarding = defaults.bool(forKey: AppStorageKeys.hasCompletedOnboarding)
+        
+        if let appNames = defaults.stringArray(forKey: "digitaldiscipline.shielded_app_names") {
+            self.shieldedTargetAppNames = appNames
+        }
         
         // Load active profile
         if let data = defaults.data(forKey: AppStorageKeys.activeProfile),
@@ -93,7 +103,6 @@ public final class SharedDataStore: ObservableObject {
            let zones = try? JSONDecoder().decode([GeofenceZone].self, from: data) {
             self.geofences = zones
         } else {
-            // Default sample geofences
             self.geofences = [
                 GeofenceZone(
                     name: "Office HQ",
@@ -119,7 +128,7 @@ public final class SharedDataStore: ObservableObject {
         self.totalBreathingSessions = defaults.integer(forKey: AppStorageKeys.totalBreathingSessions)
         self.blockAttemptsCount = defaults.integer(forKey: AppStorageKeys.blockAttemptsCount)
         self.dailyUnlockCount = defaults.integer(forKey: AppStorageKeys.dailyUnlockCount)
-        self.isShieldEnforced = defaults.bool(forKey: AppStorageKeys.isShieldEnforced)
+        self.isShieldEnforced = defaults.object(forKey: AppStorageKeys.isShieldEnforced) as? Bool ?? true
         self.isAntiTamperEnabled = defaults.object(forKey: AppStorageKeys.antiTamperEnabled) as? Bool ?? true
     }
     
@@ -199,7 +208,9 @@ public final class SharedDataStore: ObservableObject {
     
     public func completeOnboarding() {
         self.hasCompletedOnboarding = true
+        self.isShieldEnforced = true
         defaults?.set(true, forKey: AppStorageKeys.hasCompletedOnboarding)
+        defaults?.set(true, forKey: AppStorageKeys.isShieldEnforced)
     }
     
     public func resetOnboarding() {
