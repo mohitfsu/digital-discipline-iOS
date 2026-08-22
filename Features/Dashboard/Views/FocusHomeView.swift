@@ -1,14 +1,16 @@
 import SwiftUI
 import FamilyControls
 
-/// Rewired/Opal-style Hero Focus Screen with central status dial, session controls, and quick unlock loop
+/// Rewired/Opal-style Hero Focus Screen with central status dial, Dopamine Wallet, and Urge Surfing
 public struct FocusHomeView: View {
     @ObservedObject var shieldManager = ShieldManager.shared
     @ObservedObject var dataStore = SharedDataStore.shared
     @ObservedObject var authManager = ScreenTimeAuthorizationManager.shared
+    @ObservedObject var wallet = EarnedTimeWallet.shared
     
     @State private var isPickerPresented = false
     @State private var isWorkoutModalPresented = false
+    @State private var isUrgeModalPresented = false
     @State private var selectedInterventionToRun: InterventionType = .pushUps
     
     public init() {}
@@ -19,12 +21,18 @@ public struct FocusHomeView: View {
                 DisciplineTheme.background.ignoresSafeArea()
                 
                 ScrollView {
-                    VStack(spacing: 22) {
+                    VStack(spacing: 20) {
                         // Header Profile Bar
                         headerProfileBar
                         
                         // Hero Focus Status Dial
                         heroFocusDial
+                        
+                        // 🔥 Viral "I AM HAVING AN URGE" Panic Button
+                        urgeSurfingHeroButton
+                        
+                        // 💰 Earned Dopamine Wallet Card
+                        dopamineWalletCard
                         
                         // Active Temporary Pass Banner (if unlocked)
                         if dataStore.isTemporaryUnlockActive() {
@@ -48,7 +56,7 @@ public struct FocusHomeView: View {
                     .padding(.bottom, 32)
                 }
             }
-            .navigationTitle("Focus Shield")
+            .navigationTitle("Dopamine & Focus")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .topBarTrailing) {
@@ -70,6 +78,9 @@ public struct FocusHomeView: View {
                     intervention: selectedInterventionToRun,
                     unlockDurationMinutes: dataStore.activeProfile.temporaryUnlockMinutes
                 )
+            }
+            .fullScreenCover(isPresented: $isUrgeModalPresented) {
+                UrgeSurfingModalView()
             }
         }
     }
@@ -120,13 +131,13 @@ public struct FocusHomeView: View {
             // Outer Glow
             Circle()
                 .fill(shieldManager.isShieldCurrentlyActive ? DisciplineTheme.primary.opacity(0.15) : Color.white.opacity(0.03))
-                .frame(width: 250, height: 250)
+                .frame(width: 240, height: 240)
                 .blur(radius: 20)
             
             // Outer Track
             Circle()
-                .stroke(DisciplineTheme.surfaceSecondary, lineWidth: 16)
-                .frame(width: 210, height: 210)
+                .stroke(DisciplineTheme.surfaceSecondary, lineWidth: 14)
+                .frame(width: 200, height: 200)
             
             // Active Progress Ring
             Circle()
@@ -137,16 +148,16 @@ public struct FocusHomeView: View {
                         startPoint: .topLeading,
                         endPoint: .bottomTrailing
                     ),
-                    style: StrokeStyle(lineWidth: 16, lineCap: .round)
+                    style: StrokeStyle(lineWidth: 14, lineCap: .round)
                 )
-                .frame(width: 210, height: 210)
+                .frame(width: 200, height: 200)
                 .rotationEffect(.degrees(-90))
                 .animation(.spring(response: 0.8, dampingFraction: 0.7), value: shieldManager.isShieldCurrentlyActive)
             
             // Center Information
-            VStack(spacing: 8) {
+            VStack(spacing: 6) {
                 Image(systemName: shieldManager.isShieldCurrentlyActive ? "shield.fill" : "shield.slash")
-                    .font(.system(size: 36, weight: .bold))
+                    .font(.system(size: 34, weight: .bold))
                     .foregroundColor(shieldManager.isShieldCurrentlyActive ? DisciplineTheme.accent : DisciplineTheme.textSecondary)
                 
                 Text(shieldManager.isShieldCurrentlyActive ? "PROTECTED" : "UNSHIELDED")
@@ -164,7 +175,86 @@ public struct FocusHomeView: View {
                 }
             }
         }
-        .padding(.vertical, 10)
+        .padding(.vertical, 8)
+    }
+    
+    // MARK: - Viral Urge Surfing Button
+    private var urgeSurfingHeroButton: some View {
+        Button {
+            isUrgeModalPresented = true
+            HapticFeedbackManager.shared.buttonTap()
+        } label: {
+            HStack(spacing: 14) {
+                ZStack {
+                    Circle()
+                        .fill(Color(hex: "F97316"))
+                        .frame(width: 44, height: 44)
+                    Image(systemName: "exclamationmark.triangle.fill")
+                        .font(.system(size: 20))
+                        .foregroundColor(.white)
+                }
+                
+                VStack(alignment: .leading, spacing: 2) {
+                    Text("I AM HAVING AN URGE")
+                        .font(.system(size: 14, weight: .black, design: .monospaced))
+                        .foregroundColor(.white)
+                    Text("Ride the 60s craving wave $\\rightarrow$ Earn +500 XP & +5m Pass")
+                        .font(.system(size: 11))
+                        .foregroundColor(Color(hex: "FDBA74"))
+                }
+                
+                Spacer()
+                
+                Image(systemName: "chevron.right")
+                    .font(.system(size: 14, weight: .bold))
+                    .foregroundColor(.white)
+            }
+            .padding(14)
+            .background(
+                LinearGradient(
+                    colors: [Color(hex: "C2410C"), Color(hex: "EA580C")],
+                    startPoint: .leading,
+                    endPoint: .trailing
+                )
+            )
+            .cornerRadius(16)
+            .shadow(color: Color(hex: "EA580C").opacity(0.4), radius: 10, y: 3)
+        }
+    }
+    
+    // MARK: - Dopamine Wallet Card
+    private var dopamineWalletCard: some View {
+        HStack(spacing: 16) {
+            VStack(alignment: .leading, spacing: 4) {
+                Text("EARNED TIME WALLET")
+                    .font(.system(size: 9, weight: .bold, design: .monospaced))
+                    .foregroundColor(DisciplineTheme.accent)
+                Text("\(wallet.availableMinutes) MIN AVAILABLE")
+                    .font(.system(size: 18, weight: .black, design: .rounded))
+                    .foregroundColor(.white)
+                Text("Daily Earn Cap: \(wallet.dailyEarnedSeconds / 60)/60 min")
+                    .font(.system(size: 11))
+                    .foregroundColor(DisciplineTheme.textSecondary)
+            }
+            
+            Spacer()
+            
+            ZStack {
+                Circle()
+                    .fill(DisciplineTheme.accent.opacity(0.15))
+                    .frame(width: 50, height: 50)
+                Image(systemName: "banknote.fill")
+                    .font(.system(size: 22))
+                    .foregroundColor(DisciplineTheme.accent)
+            }
+        }
+        .padding(16)
+        .background(DisciplineTheme.surface)
+        .cornerRadius(16)
+        .overlay(
+            RoundedRectangle(cornerRadius: 16)
+                .stroke(DisciplineTheme.surfaceSecondary, lineWidth: 1)
+        )
     }
     
     // MARK: - Active Temporary Pass Card

@@ -7,6 +7,7 @@ struct DigitalDisciplineApp: App {
     @StateObject private var dataStore = SharedDataStore.shared
     @StateObject private var authManager = ScreenTimeAuthorizationManager.shared
     @StateObject private var geofenceMonitor = GeofenceMonitor.shared
+    @StateObject private var wallet = EarnedTimeWallet.shared
     
     init() {
         AppGroupManager.shared.setupAppGroupEnvironment()
@@ -16,7 +17,7 @@ struct DigitalDisciplineApp: App {
         WindowGroup {
             Group {
                 if !dataStore.hasCompletedOnboarding {
-                    OnboardingFlowView()
+                    Full11ScreenRewireOnboardingView()
                         .transition(.opacity)
                 } else {
                     MainAppTabView()
@@ -38,6 +39,7 @@ struct DigitalDisciplineApp: App {
                 // Initialize background services safely after UI mounts
                 geofenceMonitor.synchronizeGeofences()
                 ScheduleActivityManager.shared.registerSchedules(dataStore.activeProfile.schedules)
+                wallet.checkMidnightRollover()
             }
         }
     }
