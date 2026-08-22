@@ -4,6 +4,7 @@ import Foundation
 public enum AppStorageKeys {
     public static let appGroupName = "group.com.digitaldiscipline.app"
     
+    public static let hasCompletedOnboarding = "digitaldiscipline.has_completed_onboarding"
     public static let activeProfile = "digitaldiscipline.active_profile"
     public static let savedProfiles = "digitaldiscipline.saved_profiles"
     public static let activeSchedules = "digitaldiscipline.schedules"

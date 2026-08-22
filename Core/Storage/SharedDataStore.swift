@@ -8,6 +8,12 @@ public final class SharedDataStore: ObservableObject {
     
     private let defaults: UserDefaults?
     
+    @Published public var hasCompletedOnboarding: Bool {
+        didSet {
+            defaults?.set(hasCompletedOnboarding, forKey: AppStorageKeys.hasCompletedOnboarding)
+        }
+    }
+    
     @Published public var activeProfile: PolicyProfile {
         didSet {
             saveActiveProfile()
@@ -35,22 +41,23 @@ public final class SharedDataStore: ObservableObject {
     
     private init() {
         self.defaults = UserDefaults(suiteName: AppStorageKeys.appGroupName)
+        self.hasCompletedOnboarding = defaults?.bool(forKey: AppStorageKeys.hasCompletedOnboarding) ?? false
         
         // Initialize default profile if none exists
         let defaultProfile = PolicyProfile(
-            type: .corporate,
-            name: "🏢 Corporate / Workplace",
-            description: "Blocks social/gaming apps during office hours with strict anti-tamper.",
+            type: .selfDiscipline,
+            name: "🧘 Self-Discipline Mode",
+            description: "Break doomscrolling loops with 30s physical and mindful friction.",
             unlockType: .squats,
             requiredSquatReps: 10,
-            temporaryUnlockMinutes: 15,
-            isStrictAntiTamperEnabled: true,
+            temporaryUnlockMinutes: 10,
+            isStrictAntiTamperEnabled: false,
             schedules: [
                 ScheduleModel(
-                    title: "Office Hours",
+                    title: "Focus Hours",
                     startHour: 9,
                     startMinute: 0,
-                    endHour: 17,
+                    endHour: 18,
                     endMinute: 0,
                     daysOfWeekBitmask: 0b0111110, // Mon-Fri
                     isEnabled: true
@@ -64,6 +71,8 @@ public final class SharedDataStore: ObservableObject {
     
     public func loadAllData() {
         guard let defaults = defaults else { return }
+        
+        self.hasCompletedOnboarding = defaults.bool(forKey: AppStorageKeys.hasCompletedOnboarding)
         
         // Load active profile
         if let data = defaults.data(forKey: AppStorageKeys.activeProfile),
@@ -186,5 +195,15 @@ public final class SharedDataStore: ObservableObject {
     public func setAntiTamperEnabled(_ enabled: Bool) {
         self.isAntiTamperEnabled = enabled
         defaults?.set(enabled, forKey: AppStorageKeys.antiTamperEnabled)
+    }
+    
+    public func completeOnboarding() {
+        self.hasCompletedOnboarding = true
+        defaults?.set(true, forKey: AppStorageKeys.hasCompletedOnboarding)
+    }
+    
+    public func resetOnboarding() {
+        self.hasCompletedOnboarding = false
+        defaults?.set(false, forKey: AppStorageKeys.hasCompletedOnboarding)
     }
 }

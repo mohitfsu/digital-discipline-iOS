@@ -14,22 +14,31 @@ struct DigitalDisciplineApp: App {
     
     var body: some Scene {
         WindowGroup {
-            MainAppTabView()
-                .preferredColorScheme(.dark)
-                .onOpenURL { url in
-                    router.handleDeepLink(url: url)
+            Group {
+                if !dataStore.hasCompletedOnboarding {
+                    OnboardingFlowView()
+                        .transition(.opacity)
+                } else {
+                    MainAppTabView()
+                        .transition(.opacity)
                 }
-                .fullScreenCover(isPresented: $router.isWorkoutPresented) {
-                    InterventionRunnerView(
-                        intervention: router.activeIntervention,
-                        unlockDurationMinutes: dataStore.activeProfile.temporaryUnlockMinutes
-                    )
-                }
-                .task {
-                    // Initialize background services safely after UI mounts
-                    geofenceMonitor.synchronizeGeofences()
-                    ScheduleActivityManager.shared.registerSchedules(dataStore.activeProfile.schedules)
-                }
+            }
+            .preferredColorScheme(.dark)
+            .animation(.easeInOut(duration: 0.4), value: dataStore.hasCompletedOnboarding)
+            .onOpenURL { url in
+                router.handleDeepLink(url: url)
+            }
+            .fullScreenCover(isPresented: $router.isWorkoutPresented) {
+                InterventionRunnerView(
+                    intervention: router.activeIntervention,
+                    unlockDurationMinutes: dataStore.activeProfile.temporaryUnlockMinutes
+                )
+            }
+            .task {
+                // Initialize background services safely after UI mounts
+                geofenceMonitor.synchronizeGeofences()
+                ScheduleActivityManager.shared.registerSchedules(dataStore.activeProfile.schedules)
+            }
         }
     }
 }

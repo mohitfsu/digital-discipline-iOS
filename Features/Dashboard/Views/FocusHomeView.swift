@@ -1,14 +1,15 @@
 import SwiftUI
 import FamilyControls
 
-/// Rewired/Opal-style Hero Focus Screen with central status dial, session controls, and quick profile switcher
+/// Rewired/Opal-style Hero Focus Screen with central status dial, session controls, and quick unlock loop
 public struct FocusHomeView: View {
     @ObservedObject var shieldManager = ShieldManager.shared
     @ObservedObject var dataStore = SharedDataStore.shared
     @ObservedObject var authManager = ScreenTimeAuthorizationManager.shared
     
     @State private var isPickerPresented = false
-    @State private var showingUnlockConfirmation = false
+    @State private var isWorkoutModalPresented = false
+    @State private var selectedInterventionToRun: InterventionType = .pushUps
     
     public init() {}
     
@@ -18,12 +19,20 @@ public struct FocusHomeView: View {
                 DisciplineTheme.background.ignoresSafeArea()
                 
                 ScrollView {
-                    VStack(spacing: 24) {
+                    VStack(spacing: 22) {
                         // Header Profile Bar
                         headerProfileBar
                         
                         // Hero Focus Status Dial
                         heroFocusDial
+                        
+                        // Active Temporary Pass Banner (if unlocked)
+                        if dataStore.isTemporaryUnlockActive() {
+                            activeTemporaryPassCard
+                        } else {
+                            // Quick 5-Min Pass Action Card
+                            quickFrictionUnlockCard
+                        }
                         
                         // Action / Shield Controller
                         shieldControlActions
@@ -56,6 +65,12 @@ public struct FocusHomeView: View {
                 isPresented: $isPickerPresented,
                 selection: $shieldManager.activitySelection
             )
+            .fullScreenCover(isPresented: $isWorkoutModalPresented) {
+                InterventionRunnerView(
+                    intervention: selectedInterventionToRun,
+                    unlockDurationMinutes: dataStore.activeProfile.temporaryUnlockMinutes
+                )
+            }
         }
     }
     
@@ -105,13 +120,13 @@ public struct FocusHomeView: View {
             // Outer Glow
             Circle()
                 .fill(shieldManager.isShieldCurrentlyActive ? DisciplineTheme.primary.opacity(0.15) : Color.white.opacity(0.03))
-                .frame(width: 260, height: 260)
+                .frame(width: 250, height: 250)
                 .blur(radius: 20)
             
             // Outer Track
             Circle()
                 .stroke(DisciplineTheme.surfaceSecondary, lineWidth: 16)
-                .frame(width: 220, height: 220)
+                .frame(width: 210, height: 210)
             
             // Active Progress Ring
             Circle()
@@ -124,18 +139,18 @@ public struct FocusHomeView: View {
                     ),
                     style: StrokeStyle(lineWidth: 16, lineCap: .round)
                 )
-                .frame(width: 220, height: 220)
+                .frame(width: 210, height: 210)
                 .rotationEffect(.degrees(-90))
                 .animation(.spring(response: 0.8, dampingFraction: 0.7), value: shieldManager.isShieldCurrentlyActive)
             
             // Center Information
             VStack(spacing: 8) {
                 Image(systemName: shieldManager.isShieldCurrentlyActive ? "shield.fill" : "shield.slash")
-                    .font(.system(size: 38, weight: .bold))
+                    .font(.system(size: 36, weight: .bold))
                     .foregroundColor(shieldManager.isShieldCurrentlyActive ? DisciplineTheme.accent : DisciplineTheme.textSecondary)
                 
                 Text(shieldManager.isShieldCurrentlyActive ? "PROTECTED" : "UNSHIELDED")
-                    .font(.system(size: 14, weight: .black, design: .monospaced))
+                    .font(.system(size: 13, weight: .black, design: .monospaced))
                     .foregroundColor(.white)
                 
                 if dataStore.isTemporaryUnlockActive() {
@@ -144,12 +159,123 @@ public struct FocusHomeView: View {
                         .foregroundColor(DisciplineTheme.warning)
                 } else {
                     Text("\(shieldManager.activitySelection.applicationTokens.count) Apps Blocked")
-                        .font(.system(size: 12, weight: .medium))
+                        .font(.system(size: 11, weight: .medium))
                         .foregroundColor(DisciplineTheme.textSecondary)
                 }
             }
         }
-        .padding(.vertical, 16)
+        .padding(.vertical, 10)
+    }
+    
+    // MARK: - Active Temporary Pass Card
+    private var activeTemporaryPassCard: some View {
+        VStack(spacing: 12) {
+            HStack {
+                VStack(alignment: .leading, spacing: 2) {
+                    Text("PASS ACTIVE")
+                        .font(.system(size: 9, weight: .bold, design: .monospaced))
+                        .foregroundColor(DisciplineTheme.warning)
+                    Text("\(dataStore.remainingUnlockSeconds() / 60)m \(dataStore.remainingUnlockSeconds() % 60)s Remaining")
+                        .font(.system(size: 16, weight: .bold))
+                        .foregroundColor(.white)
+                }
+                Spacer()
+                
+                Button {
+                    dataStore.revokeTemporaryUnlock()
+                    shieldManager.enforceShields()
+                } label: {
+                    Text("Re-Lock Now")
+                        .font(.system(size: 11, weight: .bold))
+                        .foregroundColor(DisciplineTheme.danger)
+                        .padding(.horizontal, 10)
+                        .padding(.vertical, 6)
+                        .background(DisciplineTheme.danger.opacity(0.15))
+                        .cornerRadius(8)
+                }
+            }
+            
+            // Open Instagram / Apps Button
+            Button {
+                if let url = URL(string: "instagram://") {
+                    if UIApplication.shared.canOpenURL(url) {
+                        UIApplication.shared.open(url)
+                    }
+                }
+            } label: {
+                HStack(spacing: 8) {
+                    Image(systemName: "arrow.up.right.square.fill")
+                    Text("Launch Instagram Now")
+                }
+                .font(.system(size: 14, weight: .bold))
+                .foregroundColor(.white)
+                .frame(maxWidth: .infinity)
+                .padding(.vertical, 12)
+                .background(
+                    LinearGradient(
+                        colors: [Color(hex: "E1306C"), Color(hex: "F77737")],
+                        startPoint: .leading,
+                        endPoint: .trailing
+                    )
+                )
+                .cornerRadius(12)
+            }
+        }
+        .padding(14)
+        .background(DisciplineTheme.surface)
+        .cornerRadius(16)
+        .overlay(
+            RoundedRectangle(cornerRadius: 16)
+                .stroke(DisciplineTheme.warning.opacity(0.4), lineWidth: 1)
+        )
+    }
+    
+    // MARK: - Quick Friction Unlock Card
+    private var quickFrictionUnlockCard: some View {
+        Button {
+            selectedInterventionToRun = .pushUps
+            isWorkoutModalPresented = true
+            HapticFeedbackManager.shared.buttonTap()
+        } label: {
+            HStack(spacing: 14) {
+                ZStack {
+                    Circle()
+                        .fill(
+                            LinearGradient(
+                                colors: [Color(hex: "E1306C"), Color(hex: "F77737")],
+                                startPoint: .topLeading,
+                                endPoint: .bottomTrailing
+                            )
+                        )
+                        .frame(width: 44, height: 44)
+                    Image(systemName: "flame.fill")
+                        .font(.system(size: 20))
+                        .foregroundColor(.white)
+                }
+                
+                VStack(alignment: .leading, spacing: 2) {
+                    Text("Need to Open Instagram?")
+                        .font(.system(size: 14, weight: .bold))
+                        .foregroundColor(.white)
+                    Text("Do 10 Push-ups / 30s Reset $\\rightarrow$ Earn \(dataStore.activeProfile.temporaryUnlockMinutes)m Pass")
+                        .font(.system(size: 11))
+                        .foregroundColor(DisciplineTheme.textSecondary)
+                }
+                
+                Spacer()
+                
+                Image(systemName: "play.circle.fill")
+                    .font(.system(size: 24))
+                    .foregroundColor(DisciplineTheme.accent)
+            }
+            .padding(14)
+            .background(DisciplineTheme.surface)
+            .cornerRadius(16)
+            .overlay(
+                RoundedRectangle(cornerRadius: 16)
+                    .stroke(DisciplineTheme.accent.opacity(0.3), lineWidth: 1)
+            )
+        }
     }
     
     // MARK: - Shield Control Actions
@@ -166,20 +292,20 @@ public struct FocusHomeView: View {
         } label: {
             HStack(spacing: 10) {
                 Image(systemName: shieldManager.isShieldCurrentlyActive ? "pause.fill" : "lock.fill")
-                    .font(.system(size: 16, weight: .bold))
+                    .font(.system(size: 15, weight: .bold))
                 Text(shieldManager.isShieldCurrentlyActive ? "Pause Focus Shield" : "Activate Focus Shield")
-                    .font(.system(size: 16, weight: .bold))
+                    .font(.system(size: 15, weight: .bold))
             }
             .foregroundColor(.white)
             .frame(maxWidth: .infinity)
-            .padding(.vertical, 16)
+            .padding(.vertical, 14)
             .background(
                 shieldManager.isShieldCurrentlyActive ?
                 LinearGradient(colors: [Color(hex: "334155"), Color(hex: "1E293B")], startPoint: .top, endPoint: .bottom) :
                 LinearGradient(colors: [DisciplineTheme.primary, Color(hex: "0284C7")], startPoint: .topLeading, endPoint: .bottomTrailing)
             )
-            .cornerRadius(16)
-            .shadow(color: shieldManager.isShieldCurrentlyActive ? Color.clear : DisciplineTheme.primary.opacity(0.35), radius: 12, y: 4)
+            .cornerRadius(14)
+            .shadow(color: shieldManager.isShieldCurrentlyActive ? Color.clear : DisciplineTheme.primary.opacity(0.35), radius: 10, y: 4)
         }
     }
     

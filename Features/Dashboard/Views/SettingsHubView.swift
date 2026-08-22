@@ -238,7 +238,27 @@ public struct SettingsHubView: View {
     
     // MARK: - About Section
     private var aboutSection: some View {
-        VStack(spacing: 6) {
+        VStack(spacing: 12) {
+            Button {
+                dataStore.resetOnboarding()
+                HapticFeedbackManager.shared.buttonTap()
+            } label: {
+                HStack(spacing: 8) {
+                    Image(systemName: "arrow.counterclockwise")
+                    Text("Re-run Guided Setup Flow")
+                }
+                .font(.system(size: 13, weight: .bold))
+                .foregroundColor(DisciplineTheme.accent)
+                .padding(.vertical, 10)
+                .frame(maxWidth: .infinity)
+                .background(DisciplineTheme.surface)
+                .cornerRadius(12)
+                .overlay(
+                    RoundedRectangle(cornerRadius: 12)
+                        .stroke(DisciplineTheme.surfaceSecondary, lineWidth: 1)
+                )
+            }
+            
             Text("Digital Discipline v1.0.0 (Native Swift 6)")
                 .font(.system(size: 11, weight: .bold, design: .monospaced))
                 .foregroundColor(DisciplineTheme.textTertiary)

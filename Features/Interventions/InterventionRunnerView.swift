@@ -270,39 +270,70 @@ public struct MovementWorkoutHostView: View {
     
     private var completionOverlay: some View {
         ZStack {
-            Color.black.opacity(0.85).ignoresSafeArea()
+            Color.black.opacity(0.88).ignoresSafeArea()
             
             VStack(spacing: 20) {
                 ZStack {
                     Circle()
-                        .fill(DisciplineTheme.primary.opacity(0.2))
+                        .fill(DisciplineTheme.success.opacity(0.2))
                         .frame(width: 80, height: 80)
                     Image(systemName: "checkmark.seal.fill")
                         .font(.system(size: 40))
-                        .foregroundColor(DisciplineTheme.primary)
+                        .foregroundColor(DisciplineTheme.success)
                 }
                 
-                Text("Movement Validated!")
-                    .font(.system(size: 22, weight: .bold))
-                    .foregroundColor(.white)
+                VStack(spacing: 6) {
+                    Text("Friction Reset Completed!")
+                        .font(.system(size: 22, weight: .bold))
+                        .foregroundColor(.white)
+                    
+                    Text("Verified with Apple Vision AI. Your apps are now unlocked for \(unlockDurationMinutes) minutes.")
+                        .font(.system(size: 14))
+                        .foregroundColor(DisciplineTheme.textSecondary)
+                        .multilineTextAlignment(.center)
+                }
                 
-                Text("You completed \(intervention.displayName). Physical friction reset verified.")
-                    .font(.system(size: 14))
-                    .foregroundColor(DisciplineTheme.textSecondary)
-                    .multilineTextAlignment(.center)
-                
-                Button {
-                    ShieldManager.shared.grantTemporaryUnlock(durationMinutes: unlockDurationMinutes)
-                    onCompleted()
-                    dismiss()
-                } label: {
-                    Text("Claim \(unlockDurationMinutes)m Unlock")
+                VStack(spacing: 12) {
+                    // Open Instagram Button
+                    Button {
+                        ShieldManager.shared.grantTemporaryUnlock(durationMinutes: unlockDurationMinutes)
+                        onCompleted()
+                        dismiss()
+                        if let url = URL(string: "instagram://") {
+                            if UIApplication.shared.canOpenURL(url) {
+                                UIApplication.shared.open(url)
+                            }
+                        }
+                    } label: {
+                        HStack(spacing: 8) {
+                            Image(systemName: "arrow.up.right.square.fill")
+                            Text("Open Instagram (\(unlockDurationMinutes)m Pass)")
+                        }
                         .font(.system(size: 16, weight: .bold))
                         .foregroundColor(.white)
                         .frame(maxWidth: .infinity)
                         .padding(.vertical, 16)
-                        .background(DisciplineTheme.primary)
+                        .background(
+                            LinearGradient(
+                                colors: [Color(hex: "E1306C"), Color(hex: "F77737")],
+                                startPoint: .leading,
+                                endPoint: .trailing
+                            )
+                        )
                         .cornerRadius(14)
+                    }
+                    
+                    // Return to Dashboard
+                    Button {
+                        ShieldManager.shared.grantTemporaryUnlock(durationMinutes: unlockDurationMinutes)
+                        onCompleted()
+                        dismiss()
+                    } label: {
+                        Text("Return to Dashboard")
+                            .font(.system(size: 15, weight: .semibold))
+                            .foregroundColor(DisciplineTheme.textSecondary)
+                            .padding(.vertical, 8)
+                    }
                 }
             }
             .padding(24)
