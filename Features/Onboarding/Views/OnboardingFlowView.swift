@@ -130,7 +130,7 @@ public struct OnboardingFlowView: View {
                 )
                 
                 personaCard(
-                    type: .parentChild,
+                    type: .family,
                     title: "👨‍👩‍👧 Family & Parental Mode",
                     subtitle: "Manage a teen/child's device: PIN lockouts, strict anti-tamper, and educational resets."
                 )

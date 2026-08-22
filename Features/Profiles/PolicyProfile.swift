@@ -3,6 +3,7 @@ import SwiftUI
 
 /// Profile preset types matching enterprise and wellbeing personas
 public enum ProfileType: String, Codable, CaseIterable, Identifiable, Sendable {
+    case selfDiscipline = "SELF_DISCIPLINE"
     case corporate = "OFFICE_MODE"
     case family = "FAMILY_MODE"
     case deepWork = "DEEP_WORK"
@@ -12,6 +13,7 @@ public enum ProfileType: String, Codable, CaseIterable, Identifiable, Sendable {
     
     public var displayName: String {
         switch self {
+        case .selfDiscipline: return "Self-Discipline Mode"
         case .corporate: return "Corporate / Office"
         case .family: return "Family & Parenting"
         case .deepWork: return "Deep Work Focus"
@@ -21,6 +23,7 @@ public enum ProfileType: String, Codable, CaseIterable, Identifiable, Sendable {
     
     public var iconName: String {
         switch self {
+        case .selfDiscipline: return "flame.fill"
         case .corporate: return "building.2.fill"
         case .family: return "person.2.fill"
         case .deepWork: return "brain.head.profile"
@@ -30,6 +33,7 @@ public enum ProfileType: String, Codable, CaseIterable, Identifiable, Sendable {
     
     public var subtitle: String {
         switch self {
+        case .selfDiscipline: return "Autonomous habit transformation with 30s physical and mindful friction"
         case .corporate: return "Strict office hours, social block, communication whitelist"
         case .family: return "School hours, study lock, physical exercise to earn screen time"
         case .deepWork: return "Pomodoro focus blocks with physical & cognitive micro-resets"
@@ -39,8 +43,9 @@ public enum ProfileType: String, Codable, CaseIterable, Identifiable, Sendable {
     
     public var themeColor: Color {
         switch self {
+        case .selfDiscipline: return DisciplineTheme.accent
         case .corporate: return DisciplineTheme.primary
-        case .family: return DisciplineTheme.accent
+        case .family: return Color(hex: "A855F7")
         case .deepWork: return DisciplineTheme.success
         case .custom: return DisciplineTheme.warning
         }

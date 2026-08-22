@@ -10,6 +10,29 @@ public final class ProfileTemplateManager: ObservableObject {
     
     private init() {}
     
+    /// Predefined Self-Discipline Profile
+    public static var selfDisciplineTemplate: PolicyProfile {
+        PolicyProfile(
+            type: .selfDiscipline,
+            name: "🧘 Self-Discipline Habit Reset",
+            description: "Breaks compulsive dopamine doomscrolling loops with 30s physical, mindful, and cognitive friction.",
+            unlockType: .squats,
+            requiredSquatReps: 10,
+            temporaryUnlockMinutes: 5,
+            isStrictAntiTamperEnabled: false,
+            schedules: [
+                ScheduleModel(
+                    title: "Active Hours",
+                    startHour: 9,
+                    startMinute: 0,
+                    endHour: 22,
+                    endMinute: 0,
+                    daysOfWeekBitmask: 0b1111111 // Every day
+                )
+            ]
+        )
+    }
+    
     /// Predefined Corporate / Office Profile
     public static var corporateTemplate: PolicyProfile {
         PolicyProfile(
@@ -112,6 +135,8 @@ public final class ProfileTemplateManager: ObservableObject {
     
     public func applyPresetType(_ type: ProfileType) {
         switch type {
+        case .selfDiscipline:
+            applyProfile(Self.selfDisciplineTemplate)
         case .corporate:
             applyProfile(Self.corporateTemplate)
         case .family:
