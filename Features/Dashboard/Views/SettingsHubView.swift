@@ -23,7 +23,7 @@ public struct SettingsHubView: View {
                         
                         // Mode-Specific Settings Section
                         switch dataStore.activeProfile.type {
-                        case .selfDiscipline:
+                        case .selfDiscipline, .deepWork, .custom:
                             selfDisciplineSettingsSection
                         case .family:
                             familySettingsSection

@@ -28,7 +28,7 @@ public struct FocusHomeView: View {
                         
                         // Mode-Specific Dashboard Content
                         switch dataStore.activeProfile.type {
-                        case .selfDiscipline:
+                        case .selfDiscipline, .deepWork, .custom:
                             selfDisciplineDashboard
                         case .family:
                             familyParentDashboard
