@@ -1,6 +1,6 @@
 import SwiftUI
 
-/// Settings & Security Management Screen
+/// Settings & Security Management Screen (Adaptive to Profile Mode)
 public struct SettingsHubView: View {
     @ObservedObject var dataStore = SharedDataStore.shared
     @ObservedObject var authManager = ScreenTimeAuthorizationManager.shared
@@ -21,11 +21,15 @@ public struct SettingsHubView: View {
                         // Permissions & Shielding Status
                         permissionsSection
                         
-                        // Security & Anti-Tamper Section
-                        securitySection
-                        
-                        // Cloud Pairing Hub Link
-                        cloudSection
+                        // Mode-Specific Settings Section
+                        switch dataStore.activeProfile.type {
+                        case .selfDiscipline:
+                            selfDisciplineSettingsSection
+                        case .family:
+                            familySettingsSection
+                        case .corporate:
+                            corporateSettingsSection
+                        }
                         
                         // About Card
                         aboutSection
@@ -33,7 +37,7 @@ public struct SettingsHubView: View {
                     .padding(20)
                 }
             }
-            .navigationTitle("Settings & Security")
+            .navigationTitle("Settings")
             .navigationBarTitleDisplayMode(.inline)
             .sheet(isPresented: $isPinDialogOpen) {
                 PinVerificationDialog {
@@ -49,7 +53,7 @@ public struct SettingsHubView: View {
     // MARK: - Permissions Section
     private var permissionsSection: some View {
         VStack(alignment: .leading, spacing: 12) {
-            Text("PROTECTION & SYSTEM INTEGRATION")
+            Text("SYSTEM INTEGRATION")
                 .font(.system(size: 10, weight: .bold, design: .monospaced))
                 .foregroundColor(Color.ddTextSecondary)
             
@@ -108,10 +112,45 @@ public struct SettingsHubView: View {
         }
     }
     
-    // MARK: - Security Section
-    private var securitySection: some View {
+    // MARK: - Self Discipline Specific Settings
+    private var selfDisciplineSettingsSection: some View {
         VStack(alignment: .leading, spacing: 12) {
-            Text("SECURITY & HARD LOCKOUT")
+            Text("PREFERENCES")
+                .font(.system(size: 10, weight: .bold, design: .monospaced))
+                .foregroundColor(Color.ddTextSecondary)
+            
+            VStack(spacing: 0) {
+                HStack {
+                    Image(systemName: "timer")
+                        .font(.system(size: 16))
+                        .foregroundColor(Color.ddAccentSky)
+                    
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text("Earned Pass Duration")
+                            .font(.system(size: 14, weight: .bold, design: .rounded))
+                            .foregroundColor(.ddTextPrimary)
+                        Text("\(dataStore.activeProfile.temporaryUnlockMinutes) Minutes per Friction Reset")
+                            .font(.system(size: 11))
+                            .foregroundColor(Color.ddTextSecondary)
+                    }
+                    
+                    Spacer()
+                }
+                .padding(14)
+            }
+            .background(Color.ddBgCard)
+            .cornerRadius(16)
+            .overlay(
+                RoundedRectangle(cornerRadius: 16)
+                    .stroke(Color.ddBorderDefault, lineWidth: 1)
+            )
+        }
+    }
+    
+    // MARK: - Family Mode Specific Settings
+    private var familySettingsSection: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            Text("FAMILY & PARENTAL CONTROLS")
                 .font(.system(size: 10, weight: .bold, design: .monospaced))
                 .foregroundColor(Color.ddTextSecondary)
             
@@ -126,7 +165,7 @@ public struct SettingsHubView: View {
                         Text("Anti-Uninstall & Tamper Lock")
                             .font(.system(size: 14, weight: .bold, design: .rounded))
                             .foregroundColor(.ddTextPrimary)
-                        Text("Prevents app deletion and date/time modification")
+                        Text("Prevents app deletion and date modification")
                             .font(.system(size: 11))
                             .foregroundColor(Color.ddTextSecondary)
                     }
@@ -185,37 +224,32 @@ public struct SettingsHubView: View {
         }
     }
     
-    // MARK: - Cloud Section
-    private var cloudSection: some View {
-        Button {
-            isCloudHubOpen = true
-        } label: {
-            HStack(spacing: 12) {
-                ZStack {
-                    Circle()
-                        .fill(Color.ddAccentSky.opacity(0.15))
-                        .frame(width: 40, height: 40)
-                    Image(systemName: "cloud.fill")
-                        .font(.system(size: 18))
+    // MARK: - Corporate Specific Settings
+    private var corporateSettingsSection: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            Text("CORPORATE SETTINGS")
+                .font(.system(size: 10, weight: .bold, design: .monospaced))
+                .foregroundColor(Color.ddTextSecondary)
+            
+            VStack(spacing: 0) {
+                HStack {
+                    Image(systemName: "clock.fill")
+                        .font(.system(size: 16))
                         .foregroundColor(Color.ddAccentSky)
+                    
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text("Office Focus Schedule")
+                            .font(.system(size: 14, weight: .bold, design: .rounded))
+                            .foregroundColor(.ddTextPrimary)
+                        Text("Monday – Friday • 9:00 AM to 5:00 PM")
+                            .font(.system(size: 11))
+                            .foregroundColor(Color.ddTextSecondary)
+                    }
+                    
+                    Spacer()
                 }
-                
-                VStack(alignment: .leading, spacing: 2) {
-                    Text("Cloud Pairing Hub")
-                        .font(.system(size: 14, weight: .bold, design: .rounded))
-                        .foregroundColor(.ddTextPrimary)
-                    Text("Pair devices via Firestore telemetry sync")
-                        .font(.system(size: 11))
-                        .foregroundColor(Color.ddTextSecondary)
-                }
-                
-                Spacer()
-                
-                Image(systemName: "chevron.right")
-                    .font(.system(size: 12, weight: .bold))
-                    .foregroundColor(Color.ddTextMuted)
+                .padding(14)
             }
-            .padding(14)
             .background(Color.ddBgCard)
             .cornerRadius(16)
             .overlay(

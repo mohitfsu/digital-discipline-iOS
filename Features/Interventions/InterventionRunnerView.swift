@@ -1,4 +1,5 @@
 import SwiftUI
+import AVFoundation
 
 /// Universal dispatcher that executes any of the 42 neuro-behavioral and creative interventions
 public struct InterventionRunnerView: View {
@@ -86,13 +87,16 @@ public struct InterventionRunnerView: View {
     }
 }
 
-/// Host for 60 FPS Camera AI movement classifiers
+/// Host for 60 FPS Camera AI movement classifiers with explicit permission handling and safe execution
 public struct MovementWorkoutHostView: View {
     @Environment(\.dismiss) private var dismiss
     
     public let intervention: InterventionType
     public let unlockDurationMinutes: Int
     public let onCompleted: () -> Void
+    
+    @State private var cameraAuthStatus: AVAuthorizationStatus = AVCaptureDevice.authorizationStatus(for: .video)
+    @State private var isManualCompleted = false
     
     @StateObject private var squatClassifier = SquatExerciseClassifier(targetReps: 10)
     @StateObject private var pushupClassifier = PushupExerciseClassifier(targetReps: 10)
@@ -106,8 +110,26 @@ public struct MovementWorkoutHostView: View {
     
     public var body: some View {
         ZStack {
-            DisciplineTheme.background.ignoresSafeArea()
+            Color.ddBgDeep.ignoresSafeArea()
             
+            if cameraAuthStatus == .authorized {
+                cameraActiveView
+            } else {
+                cameraPermissionPromptView
+            }
+            
+            if isComplete {
+                completionOverlay
+            }
+        }
+        .onAppear {
+            cameraAuthStatus = AVCaptureDevice.authorizationStatus(for: .video)
+        }
+    }
+    
+    // MARK: - Active Camera Workout View
+    private var cameraActiveView: some View {
+        ZStack {
             CameraFeedView { frame in
                 switch intervention {
                 case .squats: squatClassifier.processFrame(frame)
@@ -124,7 +146,6 @@ public struct MovementWorkoutHostView: View {
             }
             .ignoresSafeArea()
             
-            // Dark Gradient
             LinearGradient(
                 colors: [Color.black.opacity(0.8), Color.clear, Color.black.opacity(0.9)],
                 startPoint: .top,
@@ -140,18 +161,19 @@ public struct MovementWorkoutHostView: View {
                     } label: {
                         Image(systemName: "xmark.circle.fill")
                             .font(.system(size: 28))
-                            .foregroundColor(DisciplineTheme.textSecondary)
+                            .foregroundColor(Color.ddTextSecondary)
                     }
                     Spacer()
                     VStack(alignment: .trailing, spacing: 2) {
                         Text(intervention.category.rawValue.uppercased())
                             .font(.system(size: 10, weight: .bold, design: .monospaced))
-                            .foregroundColor(DisciplineTheme.primary)
+                            .foregroundColor(Color.ddAccentSky)
                         Text(intervention.displayName)
                             .font(.system(size: 14, weight: .bold))
                             .foregroundColor(.white)
                     }
                 }
+                .padding(.top, 44)
                 
                 Spacer()
                 
@@ -163,7 +185,7 @@ public struct MovementWorkoutHostView: View {
                 // Guidance Toast
                 HStack {
                     Image(systemName: "info.circle.fill")
-                        .foregroundColor(DisciplineTheme.primary)
+                        .foregroundColor(Color.ddAccentSky)
                     Text(guidanceText)
                         .font(.system(size: 13, weight: .medium))
                         .foregroundColor(.white)
@@ -171,18 +193,102 @@ public struct MovementWorkoutHostView: View {
                 }
                 .padding()
                 .frame(maxWidth: .infinity)
-                .background(DisciplineTheme.surface.opacity(0.85))
+                .background(Color.ddBgCard.opacity(0.85))
                 .cornerRadius(14)
+                
+                // Manual Verification Fallback Button
+                Button {
+                    isManualCompleted = true
+                    HapticFeedbackManager.shared.workoutCompleted()
+                } label: {
+                    Text("✓ Complete Manually (+5m Pass)")
+                        .font(.system(size: 12, weight: .semibold))
+                        .foregroundColor(Color.ddTextSecondary)
+                        .padding(.vertical, 8)
+                }
             }
-            .padding()
-            
-            if isComplete {
-                completionOverlay
-            }
+            .padding(.horizontal, 20)
+            .padding(.bottom, 24)
         }
     }
     
+    // MARK: - Camera Permission Prompt View
+    private var cameraPermissionPromptView: some View {
+        VStack(spacing: 24) {
+            HStack {
+                Button {
+                    dismiss()
+                } label: {
+                    Image(systemName: "xmark.circle.fill")
+                        .font(.system(size: 28))
+                        .foregroundColor(Color.ddTextSecondary)
+                }
+                Spacer()
+            }
+            .padding(.top, 44)
+            
+            Spacer()
+            
+            ZStack {
+                Circle()
+                    .fill(Color.ddAccentSky.opacity(0.15))
+                    .frame(width: 100, height: 100)
+                Image(systemName: "camera.fill")
+                    .font(.system(size: 44))
+                    .foregroundColor(Color.ddAccentSky)
+            }
+            
+            VStack(spacing: 8) {
+                Text("Camera Access Required")
+                    .font(.system(size: 22, weight: .bold, design: .rounded))
+                    .foregroundColor(.ddTextPrimary)
+                
+                Text("Digital Discipline uses on-device Apple Neural Engine (ANE) Vision AI to count your push-up & squat reps locally. No video is recorded or stored.")
+                    .font(.system(size: 13))
+                    .foregroundColor(Color.ddTextSecondary)
+                    .multilineTextAlignment(.center)
+                    .padding(.horizontal, 16)
+            }
+            
+            VStack(spacing: 12) {
+                Button {
+                    AVCaptureDevice.requestAccess(for: .video) { granted in
+                        DispatchQueue.main.async {
+                            self.cameraAuthStatus = granted ? .authorized : .denied
+                            HapticFeedbackManager.shared.buttonTap()
+                        }
+                    }
+                } label: {
+                    HStack(spacing: 8) {
+                        Image(systemName: "checkmark.circle.fill")
+                        Text("Grant Camera Access")
+                    }
+                    .font(.system(size: 15, weight: .bold))
+                    .foregroundColor(.white)
+                    .frame(maxWidth: .infinity)
+                    .padding(.vertical, 14)
+                    .background(Color.ddAccentSky)
+                    .cornerRadius(14)
+                }
+                
+                Button {
+                    isManualCompleted = true
+                    HapticFeedbackManager.shared.workoutCompleted()
+                } label: {
+                    Text("Skip & Complete Manually (+5m Pass)")
+                        .font(.system(size: 14, weight: .semibold))
+                        .foregroundColor(Color.ddTextSecondary)
+                        .padding(.vertical, 10)
+                }
+            }
+            
+            Spacer()
+        }
+        .padding(24)
+    }
+    
     private var isComplete: Bool {
+        isManualCompleted ||
         squatClassifier.isWorkoutComplete ||
         pushupClassifier.isWorkoutComplete ||
         lungeClassifier.isWorkoutComplete ||
@@ -224,12 +330,12 @@ public struct MovementWorkoutHostView: View {
         VStack(spacing: 12) {
             ZStack {
                 Circle()
-                    .stroke(DisciplineTheme.surfaceSecondary, lineWidth: 12)
+                    .stroke(Color.ddBgSubtle, lineWidth: 12)
                     .frame(width: 160, height: 160)
                 
                 Circle()
                     .trim(from: 0, to: CGFloat(current) / CGFloat(max(1, target)))
-                    .stroke(DisciplineTheme.primary, style: StrokeStyle(lineWidth: 12, lineCap: .round))
+                    .stroke(Color.ddAccentSky, style: StrokeStyle(lineWidth: 12, lineCap: .round))
                     .frame(width: 160, height: 160)
                     .rotationEffect(.degrees(-90))
                 
@@ -239,7 +345,7 @@ public struct MovementWorkoutHostView: View {
                         .foregroundColor(.white)
                     Text("GOAL: \(target)")
                         .font(.system(size: 10, weight: .bold, design: .monospaced))
-                        .foregroundColor(DisciplineTheme.textSecondary)
+                        .foregroundColor(Color.ddTextSecondary)
                 }
             }
             
@@ -248,7 +354,7 @@ public struct MovementWorkoutHostView: View {
                 .foregroundColor(.white)
                 .padding(.horizontal, 12)
                 .padding(.vertical, 6)
-                .background(DisciplineTheme.surface.opacity(0.8))
+                .background(Color.ddBgCard.opacity(0.8))
                 .cornerRadius(10)
         }
     }
@@ -275,11 +381,11 @@ public struct MovementWorkoutHostView: View {
             VStack(spacing: 20) {
                 ZStack {
                     Circle()
-                        .fill(DisciplineTheme.success.opacity(0.2))
+                        .fill(Color.ddAccentEmerald.opacity(0.2))
                         .frame(width: 80, height: 80)
                     Image(systemName: "checkmark.seal.fill")
                         .font(.system(size: 40))
-                        .foregroundColor(DisciplineTheme.success)
+                        .foregroundColor(Color.ddAccentEmerald)
                 }
                 
                 VStack(spacing: 6) {
@@ -287,15 +393,16 @@ public struct MovementWorkoutHostView: View {
                         .font(.system(size: 22, weight: .bold))
                         .foregroundColor(.white)
                     
-                    Text("Verified with Apple Vision AI. Your apps are now unlocked for \(unlockDurationMinutes) minutes.")
+                    Text("Verified. You earned a \(unlockDurationMinutes)-minute pass.")
                         .font(.system(size: 14))
-                        .foregroundColor(DisciplineTheme.textSecondary)
+                        .foregroundColor(Color.ddTextSecondary)
                         .multilineTextAlignment(.center)
                 }
                 
                 VStack(spacing: 12) {
                     // Open Instagram Button
                     Button {
+                        EarnedTimeWallet.shared.credit(seconds: unlockDurationMinutes * 60, reason: "\(intervention.displayName) Completion")
                         ShieldManager.shared.grantTemporaryUnlock(durationMinutes: unlockDurationMinutes)
                         onCompleted()
                         dismiss()
@@ -325,19 +432,20 @@ public struct MovementWorkoutHostView: View {
                     
                     // Return to Dashboard
                     Button {
+                        EarnedTimeWallet.shared.credit(seconds: unlockDurationMinutes * 60, reason: "\(intervention.displayName) Completion")
                         ShieldManager.shared.grantTemporaryUnlock(durationMinutes: unlockDurationMinutes)
                         onCompleted()
                         dismiss()
                     } label: {
                         Text("Return to Dashboard")
                             .font(.system(size: 15, weight: .semibold))
-                            .foregroundColor(DisciplineTheme.textSecondary)
+                            .foregroundColor(Color.ddTextSecondary)
                             .padding(.vertical, 8)
                     }
                 }
             }
             .padding(24)
-            .background(DisciplineTheme.surface)
+            .background(Color.ddBgCard)
             .cornerRadius(24)
             .padding(24)
         }

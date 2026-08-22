@@ -1,7 +1,7 @@
 import SwiftUI
 import FamilyControls
 
-/// Master Dark OLED TodayScreen & Daily Friction Dashboard
+/// Master Dark OLED TodayScreen & Daily Friction Dashboard (Adaptive to Profile Mode)
 public struct FocusHomeView: View {
     @ObservedObject var shieldManager = ShieldManager.shared
     @ObservedObject var dataStore = SharedDataStore.shared
@@ -26,33 +26,15 @@ public struct FocusHomeView: View {
                         // Top Bar: User Profile, Streak Counter (🔥 7 Days), Mode
                         topStatusBar
                         
-                        // Hero Card: TimeDialProgressView + Quick Earn Action Pill
-                        heroTimeDialCard
-                        
-                        // 🔥 Viral "I AM HAVING AN URGE" Panic Button
-                        urgeSurfingHeroButton
-                        
-                        // ⚡ Instant App Trap Setup Card (Shortcuts Automation)
-                        shortcutsAutomationSetupCard
-                        
-                        // Active Temporary Pass Countdown (if unlocked)
-                        if dataStore.isTemporaryUnlockActive() {
-                            activeTemporaryPassCard
-                        } else {
-                            quickFrictionUnlockCard
+                        // Mode-Specific Dashboard Content
+                        switch dataStore.activeProfile.type {
+                        case .selfDiscipline:
+                            selfDisciplineDashboard
+                        case .family:
+                            familyParentDashboard
+                        case .corporate:
+                            corporateDashboard
                         }
-                        
-                        // Shield Control Action (Enforced / Protected status)
-                        shieldStatusBanner
-                        
-                        // Daily Summary Metrics
-                        metricsSummaryRow
-                        
-                        // Target Shielded Apps with Real Icons
-                        shieldedAppsGrid
-                        
-                        // Intervention Categories & Quick Resets
-                        interventionCategoryExplorer
                     }
                     .padding(.horizontal, 20)
                     .padding(.top, 12)
@@ -79,6 +61,113 @@ public struct FocusHomeView: View {
                 ShortcutsAutomationGuideView()
             }
         }
+    }
+    
+    // MARK: - Self-Discipline Mode Dashboard
+    @ViewBuilder
+    private var selfDisciplineDashboard: some View {
+        // Hero Card: TimeDialProgressView + Quick Earn Action Pill
+        heroTimeDialCard
+        
+        // 🔥 Viral Urge Surfing Panic Button
+        urgeSurfingHeroButton
+        
+        // ⚡ Shortcuts Auto-Trap Guide Card
+        shortcutsAutomationSetupCard
+        
+        // Active Temporary Pass Countdown (if unlocked)
+        if dataStore.isTemporaryUnlockActive() {
+            activeTemporaryPassCard
+        } else {
+            quickFrictionUnlockCard
+        }
+        
+        // Shield Control Action (Enforced / Protected status)
+        shieldStatusBanner
+        
+        // Daily Summary Metrics
+        metricsSummaryRow
+        
+        // Target Shielded Apps with Real Icons
+        shieldedAppsGrid
+        
+        // Intervention Categories & Quick Resets
+        interventionCategoryExplorer
+    }
+    
+    // MARK: - Family Mode Dashboard
+    @ViewBuilder
+    private var familyParentDashboard: some View {
+        VStack(alignment: .leading, spacing: 16) {
+            HStack {
+                Image(systemName: "person.2.fill")
+                    .foregroundColor(Color.ddAccentAmber)
+                Text("FAMILY & PARENTAL LOCK")
+                    .font(.system(size: 13, weight: .bold, design: .monospaced))
+                    .foregroundColor(.ddTextPrimary)
+            }
+            
+            // Study Hours Card
+            VStack(alignment: .leading, spacing: 8) {
+                Text("Study & Homework Hours (4:00 PM – 8:00 PM)")
+                    .font(.system(size: 15, weight: .bold))
+                    .foregroundColor(.ddTextPrimary)
+                Text("Child device apps are locked. Unlocking requires 10 push-ups or parental PIN.")
+                    .font(.system(size: 12))
+                    .foregroundColor(Color.ddTextSecondary)
+            }
+            .padding(14)
+            .background(Color.ddBgCard)
+            .cornerRadius(14)
+            
+            // Tamper Lock Status
+            HStack {
+                Image(systemName: "lock.shield.fill")
+                    .foregroundColor(Color.ddAccentRose)
+                Text("Anti-Uninstall & Date Modification Protection Active")
+                    .font(.system(size: 12, weight: .bold))
+                    .foregroundColor(.ddTextPrimary)
+            }
+            .padding(12)
+            .background(Color.ddBgSubtle)
+            .cornerRadius(12)
+        }
+        
+        quickFrictionUnlockCard
+        shieldStatusBanner
+        shieldedAppsGrid
+        interventionCategoryExplorer
+    }
+    
+    // MARK: - Corporate Mode Dashboard
+    @ViewBuilder
+    private var corporateDashboard: some View {
+        VStack(alignment: .leading, spacing: 16) {
+            HStack {
+                Image(systemName: "briefcase.fill")
+                    .foregroundColor(Color.ddAccentSky)
+                Text("CORPORATE FOCUS MODE (9 AM – 5 PM)")
+                    .font(.system(size: 13, weight: .bold, design: .monospaced))
+                    .foregroundColor(.ddTextPrimary)
+            }
+            
+            VStack(alignment: .leading, spacing: 8) {
+                Text("Office Hours Active: Social Apps Restricted")
+                    .font(.system(size: 15, weight: .bold))
+                    .foregroundColor(.ddTextPrimary)
+                Text("Distracting apps are blocked during office hours to preserve deep work flow.")
+                    .font(.system(size: 12))
+                    .foregroundColor(Color.ddTextSecondary)
+            }
+            .padding(14)
+            .background(Color.ddBgCard)
+            .cornerRadius(14)
+        }
+        
+        quickFrictionUnlockCard
+        shieldStatusBanner
+        shieldedAppsGrid
+        interventionCategoryExplorer
     }
     
     // MARK: - Top Status Bar
@@ -533,83 +622,6 @@ public struct FocusHomeView: View {
                 RoundedRectangle(cornerRadius: 14)
                     .stroke(Color.ddBorderDefault, lineWidth: 1)
             )
-        }
-    }
-}
-
-/// One Sec-style Shortcuts Automation Guide View
-public struct ShortcutsAutomationGuideView: View {
-    @Environment(\.dismiss) private var dismiss
-    
-    public var body: some View {
-        ZStack {
-            Color.ddBgDeep.ignoresSafeArea()
-            
-            VStack(spacing: 24) {
-                // Header
-                HStack {
-                    Text("Auto-Trap Instagram")
-                        .font(.system(size: 20, weight: .bold, design: .rounded))
-                        .foregroundColor(.ddTextPrimary)
-                    Spacer()
-                    Button {
-                        dismiss()
-                    } label: {
-                        Image(systemName: "xmark.circle.fill")
-                            .font(.system(size: 24))
-                            .foregroundColor(Color.ddTextSecondary)
-                    }
-                }
-                
-                VStack(alignment: .leading, spacing: 14) {
-                    guideStepRow(step: "1", title: "Open Apple 'Shortcuts' App", desc: "Tap the 'Automation' tab at the bottom.")
-                    guideStepRow(step: "2", title: "Create Personal Automation", desc: "Select 'App' $\\rightarrow$ Choose 'Instagram' $\\rightarrow$ Is Opened.")
-                    guideStepRow(step: "3", title: "Add 'Open App' Action", desc: "Choose 'Open Digital Discipline' $\\rightarrow$ Turn OFF 'Ask Before Running'.")
-                }
-                .padding(16)
-                .background(Color.ddBgCard)
-                .cornerRadius(16)
-                
-                Button {
-                    if let url = URL(string: "shortcuts://") {
-                        if UIApplication.shared.canOpenURL(url) {
-                            UIApplication.shared.open(url)
-                        }
-                    }
-                    dismiss()
-                } label: {
-                    Text("Open Shortcuts App Now")
-                        .font(.system(size: 15, weight: .bold))
-                        .foregroundColor(.white)
-                        .frame(maxWidth: .infinity)
-                        .padding(.vertical, 14)
-                        .background(Color.ddAccentSky)
-                        .cornerRadius(14)
-                }
-                
-                Spacer()
-            }
-            .padding(24)
-        }
-    }
-    
-    private func guideStepRow(step: String, title: String, desc: String) -> some View {
-        HStack(alignment: .top, spacing: 12) {
-            Text(step)
-                .font(.system(size: 12, weight: .black, design: .monospaced))
-                .foregroundColor(Color.ddAccentSky)
-                .frame(width: 24, height: 24)
-                .background(Color.ddAccentSky.opacity(0.15))
-                .clipShape(Circle())
-            
-            VStack(alignment: .leading, spacing: 2) {
-                Text(title)
-                    .font(.system(size: 14, weight: .bold))
-                    .foregroundColor(.ddTextPrimary)
-                Text(desc)
-                    .font(.system(size: 12))
-                    .foregroundColor(Color.ddTextSecondary)
-            }
         }
     }
 }
