@@ -1,7 +1,7 @@
 import SwiftUI
 import FamilyControls
 
-/// Complete 11-Screen Rewire-Style Onboarding Experience
+/// Complete 11-Screen Rewire-Style Onboarding Experience with dynamic auto-sizing and category detection
 public struct Full11ScreenRewireOnboardingView: View {
     @ObservedObject var dataStore = SharedDataStore.shared
     @ObservedObject var shieldManager = ShieldManager.shared
@@ -11,7 +11,7 @@ public struct Full11ScreenRewireOnboardingView: View {
     @State private var currentStep: Int = 0
     @State private var selectedPatterns: Set<String> = ["I scroll longer than planned"]
     @State private var dailyHoursSpent: Double = 3.0
-    @State private var selectedInterruptionStyles: Set<String> = ["Movement AI", "Box Breathing", "Zen Enso Canvas"]
+    @State private var selectedInterruptionStyles: Set<String> = ["Movement AI (Push-ups & Squats)", "Box Breathing & 4-7-8", "Zen Enso Canvas & Art"]
     @State private var selectedAccessTierMinutes: Int = 5
     @State private var isActivityPickerPresented = false
     
@@ -78,7 +78,7 @@ public struct Full11ScreenRewireOnboardingView: View {
     
     // MARK: - Screen 0: Cinematic Manifesto
     private var screen0Manifesto: some View {
-        VStack(spacing: 28) {
+        VStack(spacing: 24) {
             Spacer()
             
             ZStack {
@@ -91,10 +91,10 @@ public struct Full11ScreenRewireOnboardingView: View {
                             endRadius: 100
                         )
                     )
-                    .frame(width: 160, height: 160)
+                    .frame(width: 150, height: 150)
                 
                 Image(systemName: "flame.circle.fill")
-                    .font(.system(size: 72))
+                    .font(.system(size: 68))
                     .foregroundStyle(
                         LinearGradient(
                             colors: [DisciplineTheme.primary, DisciplineTheme.accent],
@@ -104,14 +104,15 @@ public struct Full11ScreenRewireOnboardingView: View {
                     )
             }
             
-            VStack(spacing: 16) {
+            VStack(spacing: 14) {
                 Text("Your phone isn't the problem.")
                     .font(.system(size: 26, weight: .black, design: .rounded))
                     .foregroundColor(.white)
                     .multilineTextAlignment(.center)
+                    .fixedSize(horizontal: false, vertical: true)
                 
                 Text("The moment between impulse and action is.")
-                    .font(.system(size: 22, weight: .bold, design: .rounded))
+                    .font(.system(size: 20, weight: .bold, design: .rounded))
                     .foregroundStyle(
                         LinearGradient(
                             colors: [DisciplineTheme.accent, Color(hex: "38BDF8")],
@@ -120,13 +121,15 @@ public struct Full11ScreenRewireOnboardingView: View {
                         )
                     )
                     .multilineTextAlignment(.center)
+                    .fixedSize(horizontal: false, vertical: true)
                 
                 Text("Rewire traps the automatic dopamine loop and gives you back hours of deep focus.")
                     .font(.system(size: 14))
                     .foregroundColor(DisciplineTheme.textSecondary)
                     .multilineTextAlignment(.center)
-                    .padding(.horizontal, 24)
+                    .padding(.horizontal, 20)
                     .lineSpacing(4)
+                    .fixedSize(horizontal: false, vertical: true)
             }
             
             Spacer()
@@ -140,18 +143,19 @@ public struct Full11ScreenRewireOnboardingView: View {
     
     // MARK: - Screen 1: Behavioral Patterns
     private var screen1Patterns: some View {
-        VStack(alignment: .leading, spacing: 20) {
-            VStack(alignment: .leading, spacing: 6) {
+        VStack(alignment: .leading, spacing: 18) {
+            VStack(alignment: .leading, spacing: 4) {
                 Text("BEHAVIOR IDENTIFICATION")
                     .font(.system(size: 10, weight: .bold, design: .monospaced))
                     .foregroundColor(DisciplineTheme.accent)
                 Text("Which loop traps you most?")
                     .font(.system(size: 24, weight: .heavy))
                     .foregroundColor(.white)
+                    .fixedSize(horizontal: false, vertical: true)
             }
             .padding(.top, 12)
             
-            VStack(spacing: 12) {
+            VStack(spacing: 10) {
                 patternToggleCard(title: "I open my phone without thinking", emoji: "📱")
                 patternToggleCard(title: "I scroll longer than planned", emoji: "⏳")
                 patternToggleCard(title: "Minutes turn into hours", emoji: "🌀")
@@ -173,23 +177,25 @@ public struct Full11ScreenRewireOnboardingView: View {
             }
             HapticFeedbackManager.shared.buttonTap()
         } label: {
-            HStack(spacing: 14) {
+            HStack(spacing: 12) {
                 Text(emoji)
-                    .font(.system(size: 24))
+                    .font(.system(size: 22))
                 Text(title)
-                    .font(.system(size: 15, weight: .bold))
+                    .font(.system(size: 14, weight: .bold))
                     .foregroundColor(.white)
+                    .multilineTextAlignment(.leading)
+                    .fixedSize(horizontal: false, vertical: true)
                 Spacer()
                 if isSelected {
                     Image(systemName: "checkmark.circle.fill")
                         .foregroundColor(DisciplineTheme.accent)
                 }
             }
-            .padding(16)
+            .padding(14)
             .background(isSelected ? DisciplineTheme.surfaceSecondary : DisciplineTheme.surface)
-            .cornerRadius(16)
+            .cornerRadius(14)
             .overlay(
-                RoundedRectangle(cornerRadius: 16)
+                RoundedRectangle(cornerRadius: 14)
                     .stroke(isSelected ? DisciplineTheme.accent : DisciplineTheme.surfaceSecondary, lineWidth: isSelected ? 2 : 1)
             )
         }
@@ -197,17 +203,19 @@ public struct Full11ScreenRewireOnboardingView: View {
     
     // MARK: - Screen 2: App Picker
     private var screen2AppPicker: some View {
-        VStack(alignment: .leading, spacing: 20) {
-            VStack(alignment: .leading, spacing: 6) {
+        VStack(alignment: .leading, spacing: 18) {
+            VStack(alignment: .leading, spacing: 4) {
                 Text("TARGET APPS")
                     .font(.system(size: 10, weight: .bold, design: .monospaced))
                     .foregroundColor(DisciplineTheme.accent)
                 Text("Choose Distracting Apps")
                     .font(.system(size: 24, weight: .heavy))
                     .foregroundColor(.white)
-                Text("Select the apps you want to protect with neuro-friction.")
-                    .font(.system(size: 14))
+                    .fixedSize(horizontal: false, vertical: true)
+                Text("Select individual apps or full categories (like Social or Games).")
+                    .font(.system(size: 13))
                     .foregroundColor(DisciplineTheme.textSecondary)
+                    .fixedSize(horizontal: false, vertical: true)
             }
             .padding(.top, 12)
             
@@ -222,15 +230,17 @@ public struct Full11ScreenRewireOnboardingView: View {
                         Text("Open Screen Time Picker")
                             .font(.system(size: 15, weight: .bold))
                             .foregroundColor(.white)
-                        Text("Instagram, TikTok, YouTube, Reddit, Games...")
-                            .font(.system(size: 12))
+                        Text("Tap categories or expand to pick Instagram, TikTok, YouTube...")
+                            .font(.system(size: 11))
                             .foregroundColor(DisciplineTheme.textSecondary)
+                            .multilineTextAlignment(.leading)
+                            .fixedSize(horizontal: false, vertical: true)
                     }
                     Spacer()
                     Image(systemName: "chevron.right")
                         .foregroundColor(DisciplineTheme.textTertiary)
                 }
-                .padding(18)
+                .padding(16)
                 .background(DisciplineTheme.surface)
                 .cornerRadius(16)
                 .overlay(
@@ -239,17 +249,44 @@ public struct Full11ScreenRewireOnboardingView: View {
                 )
             }
             
-            HStack(spacing: 12) {
-                Image(systemName: "checkmark.shield.fill")
-                    .foregroundColor(DisciplineTheme.success)
-                Text("\(shieldManager.activitySelection.applicationTokens.count) Apps Selected")
-                    .font(.system(size: 13, weight: .bold))
-                    .foregroundColor(.white)
-                Spacer()
+            // Selection Status Card
+            VStack(alignment: .leading, spacing: 8) {
+                if shieldManager.activitySelection.applicationTokens.isEmpty && shieldManager.activitySelection.categoryTokens.isEmpty {
+                    HStack(spacing: 10) {
+                        Image(systemName: "exclamationmark.circle.fill")
+                            .foregroundColor(DisciplineTheme.warning)
+                        Text("No apps selected yet. Tap above to choose.")
+                            .font(.system(size: 12, weight: .medium))
+                            .foregroundColor(.white)
+                        Spacer()
+                    }
+                } else {
+                    HStack(spacing: 14) {
+                        if !shieldManager.activitySelection.applicationTokens.isEmpty {
+                            HStack(spacing: 6) {
+                                Image(systemName: "app.badge.checkmark.fill")
+                                    .foregroundColor(DisciplineTheme.success)
+                                Text("\(shieldManager.activitySelection.applicationTokens.count) Specific Apps")
+                                    .font(.system(size: 12, weight: .bold))
+                                    .foregroundColor(.white)
+                            }
+                        }
+                        if !shieldManager.activitySelection.categoryTokens.isEmpty {
+                            HStack(spacing: 6) {
+                                Image(systemName: "folder.badge.gearshape.fill")
+                                    .foregroundColor(DisciplineTheme.accent)
+                                Text("\(shieldManager.activitySelection.categoryTokens.count) Categories")
+                                    .font(.system(size: 12, weight: .bold))
+                                    .foregroundColor(.white)
+                            }
+                        }
+                        Spacer()
+                    }
+                }
             }
-            .padding(14)
+            .padding(12)
             .background(DisciplineTheme.surfaceSecondary)
-            .cornerRadius(14)
+            .cornerRadius(12)
             
             Spacer()
         }
@@ -258,18 +295,19 @@ public struct Full11ScreenRewireOnboardingView: View {
     
     // MARK: - Screen 3: Self-Reported Time
     private var screen3TimeSpent: some View {
-        VStack(alignment: .leading, spacing: 20) {
-            VStack(alignment: .leading, spacing: 6) {
+        VStack(alignment: .leading, spacing: 18) {
+            VStack(alignment: .leading, spacing: 4) {
                 Text("DAILY SCREEN TIME")
                     .font(.system(size: 10, weight: .bold, design: .monospaced))
                     .foregroundColor(DisciplineTheme.accent)
                 Text("How much time on apps?")
                     .font(.system(size: 24, weight: .heavy))
                     .foregroundColor(.white)
+                    .fixedSize(horizontal: false, vertical: true)
             }
             .padding(.top, 12)
             
-            VStack(spacing: 12) {
+            VStack(spacing: 10) {
                 timeOptionCard(hours: 1.0, label: "< 1 Hour / Day")
                 timeOptionCard(hours: 2.0, label: "1 – 2 Hours / Day")
                 timeOptionCard(hours: 3.5, label: "2 – 4 Hours / Day (Average)")
@@ -289,7 +327,7 @@ public struct Full11ScreenRewireOnboardingView: View {
         } label: {
             HStack {
                 Text(label)
-                    .font(.system(size: 15, weight: .bold))
+                    .font(.system(size: 14, weight: .bold))
                     .foregroundColor(.white)
                 Spacer()
                 if isSelected {
@@ -297,11 +335,11 @@ public struct Full11ScreenRewireOnboardingView: View {
                         .foregroundColor(DisciplineTheme.accent)
                 }
             }
-            .padding(16)
+            .padding(14)
             .background(isSelected ? DisciplineTheme.surfaceSecondary : DisciplineTheme.surface)
-            .cornerRadius(16)
+            .cornerRadius(14)
             .overlay(
-                RoundedRectangle(cornerRadius: 16)
+                RoundedRectangle(cornerRadius: 14)
                     .stroke(isSelected ? DisciplineTheme.accent : DisciplineTheme.surfaceSecondary, lineWidth: isSelected ? 2 : 1)
             )
         }
@@ -311,16 +349,16 @@ public struct Full11ScreenRewireOnboardingView: View {
     private var screen4LifetimeLoss: some View {
         let yearsLost = (dailyHoursSpent * 365.0 * 55.0) / (24.0 * 365.0)
         
-        return VStack(spacing: 24) {
+        return VStack(spacing: 22) {
             Spacer()
             
-            VStack(spacing: 8) {
+            VStack(spacing: 6) {
                 Text("YOUR LIFETIME REALITY")
                     .font(.system(size: 10, weight: .black, design: .monospaced))
                     .foregroundColor(DisciplineTheme.danger)
                 
                 Text(String(format: "%.1f YEARS", yearsLost))
-                    .font(.system(size: 48, weight: .black, design: .rounded))
+                    .font(.system(size: 44, weight: .black, design: .rounded))
                     .foregroundStyle(
                         LinearGradient(
                             colors: [Color(hex: "EF4444"), Color(hex: "F97316")],
@@ -330,14 +368,15 @@ public struct Full11ScreenRewireOnboardingView: View {
                     )
                 
                 Text("of your remaining life spent staring at a glass screen.")
-                    .font(.system(size: 16, weight: .bold))
+                    .font(.system(size: 15, weight: .bold))
                     .foregroundColor(.white)
                     .multilineTextAlignment(.center)
+                    .fixedSize(horizontal: false, vertical: true)
             }
             
-            VStack(alignment: .leading, spacing: 10) {
+            VStack(alignment: .leading, spacing: 8) {
                 Text("At \(String(format: "%.1f", dailyHoursSpent)) hours/day:")
-                    .font(.system(size: 13, weight: .bold))
+                    .font(.system(size: 12, weight: .bold))
                     .foregroundColor(DisciplineTheme.textSecondary)
                 
                 HStack {
@@ -346,15 +385,17 @@ public struct Full11ScreenRewireOnboardingView: View {
                 }
                 .font(.system(size: 13))
                 .foregroundColor(.white)
+                .fixedSize(horizontal: false, vertical: true)
                 
                 HStack {
-                    Text("• Equivalent to 15+ entire unlived books or skills")
+                    Text("• Equivalent to 15+ entire unlived books, workouts, or skills")
                     Spacer()
                 }
                 .font(.system(size: 13))
                 .foregroundColor(.white)
+                .fixedSize(horizontal: false, vertical: true)
             }
-            .padding(18)
+            .padding(16)
             .background(DisciplineTheme.surface)
             .cornerRadius(16)
             
@@ -365,28 +406,30 @@ public struct Full11ScreenRewireOnboardingView: View {
     
     // MARK: - Screen 5: The Reframe
     private var screen5TheReframe: some View {
-        VStack(spacing: 28) {
+        VStack(spacing: 24) {
             Spacer()
             
-            VStack(spacing: 8) {
+            VStack(spacing: 6) {
                 Text("THE REFRAME")
                     .font(.system(size: 10, weight: .black, design: .monospaced))
                     .foregroundColor(DisciplineTheme.accent)
                 Text("Don't Quit Your Apps.")
-                    .font(.system(size: 26, weight: .black, design: .rounded))
+                    .font(.system(size: 24, weight: .black, design: .rounded))
                     .foregroundColor(.white)
                 Text("Just give yourself a better interruption.")
-                    .font(.system(size: 16, weight: .medium))
+                    .font(.system(size: 15, weight: .medium))
                     .foregroundColor(DisciplineTheme.textSecondary)
             }
             
             // Flowchart Diagram
-            HStack(spacing: 8) {
+            HStack(spacing: 6) {
                 flowNode(title: "IMPULSE", subtitle: "Reflex", color: DisciplineTheme.danger)
                 Image(systemName: "arrow.right")
+                    .font(.system(size: 11))
                     .foregroundColor(DisciplineTheme.textTertiary)
                 flowNode(title: "PAUSE", subtitle: "30s Reset", color: DisciplineTheme.accent)
                 Image(systemName: "arrow.right")
+                    .font(.system(size: 11))
                     .foregroundColor(DisciplineTheme.textTertiary)
                 flowNode(title: "CHOOSE", subtitle: "Earned Pass", color: DisciplineTheme.success)
             }
@@ -395,7 +438,8 @@ public struct Full11ScreenRewireOnboardingView: View {
                 .font(.system(size: 13))
                 .foregroundColor(DisciplineTheme.textSecondary)
                 .multilineTextAlignment(.center)
-                .padding(.horizontal, 16)
+                .padding(.horizontal, 12)
+                .fixedSize(horizontal: false, vertical: true)
             
             Spacer()
         }
@@ -405,13 +449,13 @@ public struct Full11ScreenRewireOnboardingView: View {
     private func flowNode(title: String, subtitle: String, color: Color) -> some View {
         VStack(spacing: 4) {
             Text(title)
-                .font(.system(size: 12, weight: .black, design: .monospaced))
+                .font(.system(size: 11, weight: .black, design: .monospaced))
                 .foregroundColor(color)
             Text(subtitle)
-                .font(.system(size: 10))
+                .font(.system(size: 9))
                 .foregroundColor(DisciplineTheme.textSecondary)
         }
-        .padding(12)
+        .padding(10)
         .frame(maxWidth: .infinity)
         .background(DisciplineTheme.surface)
         .cornerRadius(12)
@@ -423,22 +467,23 @@ public struct Full11ScreenRewireOnboardingView: View {
     
     // MARK: - Screen 6: Interruption Styles
     private var screen6InterruptionStyles: some View {
-        VStack(alignment: .leading, spacing: 20) {
-            VStack(alignment: .leading, spacing: 6) {
+        VStack(alignment: .leading, spacing: 18) {
+            VStack(alignment: .leading, spacing: 4) {
                 Text("NEURO-RESET MODES")
                     .font(.system(size: 10, weight: .bold, design: .monospaced))
                     .foregroundColor(DisciplineTheme.accent)
                 Text("Pick Your Resets")
                     .font(.system(size: 24, weight: .heavy))
                     .foregroundColor(.white)
+                    .fixedSize(horizontal: false, vertical: true)
                 Text("Select the types of friction you enjoy.")
-                    .font(.system(size: 14))
+                    .font(.system(size: 13))
                     .foregroundColor(DisciplineTheme.textSecondary)
             }
             .padding(.top, 12)
             
             ScrollView {
-                VStack(spacing: 10) {
+                VStack(spacing: 8) {
                     styleToggleRow(title: "Movement AI (Push-ups & Squats)", icon: "🏋️")
                     styleToggleRow(title: "Box Breathing & 4-7-8", icon: "🌬️")
                     styleToggleRow(title: "Zen Enso Canvas & Art", icon: "🎨")
@@ -465,21 +510,23 @@ public struct Full11ScreenRewireOnboardingView: View {
         } label: {
             HStack(spacing: 12) {
                 Text(icon)
-                    .font(.system(size: 22))
+                    .font(.system(size: 20))
                 Text(title)
-                    .font(.system(size: 14, weight: .bold))
+                    .font(.system(size: 13, weight: .bold))
                     .foregroundColor(.white)
+                    .multilineTextAlignment(.leading)
+                    .fixedSize(horizontal: false, vertical: true)
                 Spacer()
                 if isSelected {
                     Image(systemName: "checkmark.circle.fill")
                         .foregroundColor(DisciplineTheme.accent)
                 }
             }
-            .padding(14)
+            .padding(12)
             .background(isSelected ? DisciplineTheme.surfaceSecondary : DisciplineTheme.surface)
-            .cornerRadius(14)
+            .cornerRadius(12)
             .overlay(
-                RoundedRectangle(cornerRadius: 14)
+                RoundedRectangle(cornerRadius: 12)
                     .stroke(isSelected ? DisciplineTheme.accent : DisciplineTheme.surfaceSecondary, lineWidth: isSelected ? 2 : 1)
             )
         }
@@ -487,7 +534,7 @@ public struct Full11ScreenRewireOnboardingView: View {
     
     // MARK: - Screen 7: Live Breathing Calibration
     private var screen7BreathingCalibration: some View {
-        VStack(spacing: 28) {
+        VStack(spacing: 24) {
             Spacer()
             
             VStack(spacing: 6) {
@@ -506,23 +553,23 @@ public struct Full11ScreenRewireOnboardingView: View {
             ZStack {
                 Circle()
                     .fill(DisciplineTheme.accent.opacity(0.15))
-                    .frame(width: 240 * breathScale, height: 240 * breathScale)
+                    .frame(width: 220 * breathScale, height: 220 * breathScale)
                     .blur(radius: 16)
                 
                 Circle()
                     .stroke(DisciplineTheme.accent, lineWidth: 6)
-                    .frame(width: 180 * breathScale, height: 180 * breathScale)
+                    .frame(width: 170 * breathScale, height: 170 * breathScale)
                 
-                VStack(spacing: 6) {
+                VStack(spacing: 4) {
                     Text(breathPhase.uppercased())
-                        .font(.system(size: 24, weight: .heavy, design: .rounded))
+                        .font(.system(size: 22, weight: .heavy, design: .rounded))
                         .foregroundColor(.white)
                     Text("Breath \(breathCount)/3")
                         .font(.system(size: 11, weight: .bold, design: .monospaced))
                         .foregroundColor(DisciplineTheme.accent)
                 }
             }
-            .frame(height: 240)
+            .frame(height: 220)
             
             Spacer()
         }
@@ -551,7 +598,7 @@ public struct Full11ScreenRewireOnboardingView: View {
                 DispatchQueue.main.asyncAfter(deadline: .now() + 4.0) {
                     breathCount = 2
                     isBreathTestDone = true
-                    HapticFeedbackManager.shared.repSuccess()
+                    HapticFeedbackManager.shared.repCompleted()
                 }
             }
         }
@@ -559,21 +606,22 @@ public struct Full11ScreenRewireOnboardingView: View {
     
     // MARK: - Screen 8: Earned Access Tier
     private var screen8AccessTier: some View {
-        VStack(alignment: .leading, spacing: 20) {
-            VStack(alignment: .leading, spacing: 6) {
+        VStack(alignment: .leading, spacing: 18) {
+            VStack(alignment: .leading, spacing: 4) {
                 Text("EARNED PASS DURATION")
                     .font(.system(size: 10, weight: .bold, design: .monospaced))
                     .foregroundColor(DisciplineTheme.accent)
                 Text("Set Your Reward Tier")
                     .font(.system(size: 24, weight: .heavy))
                     .foregroundColor(.white)
+                    .fixedSize(horizontal: false, vertical: true)
                 Text("How many minutes of Instagram/TikTok per reset?")
-                    .font(.system(size: 14))
+                    .font(.system(size: 13))
                     .foregroundColor(DisciplineTheme.textSecondary)
             }
             .padding(.top, 12)
             
-            VStack(spacing: 12) {
+            VStack(spacing: 10) {
                 tierCard(minutes: 5, title: "5 Minutes (Strict & Fast)", subtitle: "Quick check-in, stops deep rabbit holes.")
                 tierCard(minutes: 10, title: "10 Minutes (Balanced)", subtitle: "Recommended: Enough to reply to messages.")
                 tierCard(minutes: 15, title: "15 Minutes (Generous)", subtitle: "Extended session for long-form reading.")
@@ -593,7 +641,7 @@ public struct Full11ScreenRewireOnboardingView: View {
             VStack(alignment: .leading, spacing: 4) {
                 HStack {
                     Text(title)
-                        .font(.system(size: 15, weight: .bold))
+                        .font(.system(size: 14, weight: .bold))
                         .foregroundColor(.white)
                     Spacer()
                     if isSelected {
@@ -602,14 +650,16 @@ public struct Full11ScreenRewireOnboardingView: View {
                     }
                 }
                 Text(subtitle)
-                    .font(.system(size: 12))
+                    .font(.system(size: 11))
                     .foregroundColor(DisciplineTheme.textSecondary)
+                    .multilineTextAlignment(.leading)
+                    .fixedSize(horizontal: false, vertical: true)
             }
-            .padding(16)
+            .padding(14)
             .background(isSelected ? DisciplineTheme.surfaceSecondary : DisciplineTheme.surface)
-            .cornerRadius(16)
+            .cornerRadius(14)
             .overlay(
-                RoundedRectangle(cornerRadius: 16)
+                RoundedRectangle(cornerRadius: 14)
                     .stroke(isSelected ? DisciplineTheme.accent : DisciplineTheme.surfaceSecondary, lineWidth: isSelected ? 2 : 1)
             )
         }
@@ -617,11 +667,11 @@ public struct Full11ScreenRewireOnboardingView: View {
     
     // MARK: - Screen 9: Permissions Handshake
     private var screen9Permissions: some View {
-        VStack(spacing: 24) {
+        VStack(spacing: 22) {
             Spacer()
             
             Image(systemName: "lock.shield.fill")
-                .font(.system(size: 60))
+                .font(.system(size: 56))
                 .foregroundColor(DisciplineTheme.accent)
             
             VStack(spacing: 8) {
@@ -629,10 +679,11 @@ public struct Full11ScreenRewireOnboardingView: View {
                     .font(.system(size: 24, weight: .heavy))
                     .foregroundColor(.white)
                 Text("iOS requires Screen Time authorization to present mindful intervention shields.")
-                    .font(.system(size: 14))
+                    .font(.system(size: 13))
                     .foregroundColor(DisciplineTheme.textSecondary)
                     .multilineTextAlignment(.center)
-                    .padding(.horizontal, 20)
+                    .padding(.horizontal, 16)
+                    .fixedSize(horizontal: false, vertical: true)
             }
             
             Button {
@@ -647,11 +698,11 @@ public struct Full11ScreenRewireOnboardingView: View {
                 .font(.system(size: 15, weight: .bold))
                 .foregroundColor(.white)
                 .frame(maxWidth: .infinity)
-                .padding(.vertical, 16)
+                .padding(.vertical, 14)
                 .background(authManager.isAuthorized ? DisciplineTheme.success : DisciplineTheme.primary)
                 .cornerRadius(14)
             }
-            .padding(.horizontal, 20)
+            .padding(.horizontal, 16)
             
             Spacer()
         }
@@ -660,27 +711,28 @@ public struct Full11ScreenRewireOnboardingView: View {
     
     // MARK: - Screen 10: Plan Activation
     private var screen10Activation: some View {
-        VStack(spacing: 24) {
+        VStack(spacing: 22) {
             Spacer()
             
             ZStack {
                 Circle()
                     .fill(DisciplineTheme.success.opacity(0.2))
-                    .frame(width: 130, height: 130)
+                    .frame(width: 120, height: 120)
                 Image(systemName: "bolt.badge.checkmark.fill")
-                    .font(.system(size: 58))
+                    .font(.system(size: 54))
                     .foregroundColor(DisciplineTheme.success)
             }
             
             VStack(spacing: 8) {
                 Text("Your Plan Is Active!")
-                    .font(.system(size: 28, weight: .black, design: .rounded))
+                    .font(.system(size: 26, weight: .black, design: .rounded))
                     .foregroundColor(.white)
                 Text("Your Dopamine Wallet is primed. Each friction challenge will grant you a \(selectedAccessTierMinutes)-minute focus pass.")
-                    .font(.system(size: 14))
+                    .font(.system(size: 13))
                     .foregroundColor(DisciplineTheme.textSecondary)
                     .multilineTextAlignment(.center)
-                    .padding(.horizontal, 20)
+                    .padding(.horizontal, 16)
+                    .fixedSize(horizontal: false, vertical: true)
             }
             
             Spacer()
@@ -715,10 +767,10 @@ public struct Full11ScreenRewireOnboardingView: View {
                 }
             } label: {
                 Text(currentStep == 0 ? "BUILD MY PLAN" : (currentStep == 10 ? "Enter Dopamine Hub" : "Continue"))
-                    .font(.system(size: 16, weight: .bold))
+                    .font(.system(size: 15, weight: .bold))
                     .foregroundColor(.white)
                     .frame(maxWidth: .infinity)
-                    .frame(height: 50)
+                    .frame(height: 48)
                     .background(
                         LinearGradient(
                             colors: [DisciplineTheme.primary, DisciplineTheme.accent],
@@ -739,6 +791,6 @@ public struct Full11ScreenRewireOnboardingView: View {
         wallet.credit(seconds: 300, reason: "Onboarding Welcome Bonus")
         shieldManager.enforceShields()
         dataStore.completeOnboarding()
-        HapticFeedbackManager.shared.repSuccess()
+        HapticFeedbackManager.shared.repCompleted()
     }
 }

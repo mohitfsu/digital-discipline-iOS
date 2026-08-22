@@ -23,6 +23,10 @@
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
 	
+	<!-- Native Full-Screen Edge-to-Edge Rendering on all modern iPhones -->
+	<key>UILaunchScreen</key>
+	<dict/>
+	
 	<!-- Privacy Permissions -->
 	<key>NSCameraUsageDescription</key>
 	<string>Digital Discipline requires front camera access for real-time Vision AI body pose detection during physical friction workouts.</string>
