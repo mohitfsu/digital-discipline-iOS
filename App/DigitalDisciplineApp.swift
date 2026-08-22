@@ -6,6 +6,7 @@ struct DigitalDisciplineApp: App {
     @StateObject private var router = NavigationRouter.shared
     @StateObject private var dataStore = SharedDataStore.shared
     @StateObject private var authManager = ScreenTimeAuthorizationManager.shared
+    @StateObject private var shieldManager = ShieldManager.shared
     @StateObject private var geofenceMonitor = GeofenceMonitor.shared
     @StateObject private var wallet = EarnedTimeWallet.shared
     
@@ -36,7 +37,8 @@ struct DigitalDisciplineApp: App {
                 )
             }
             .task {
-                // Initialize background services safely after UI mounts
+                // Enforce background Screen Time shields automatically at the OS level
+                shieldManager.enforceShields()
                 geofenceMonitor.synchronizeGeofences()
                 ScheduleActivityManager.shared.registerSchedules(dataStore.activeProfile.schedules)
                 wallet.checkMidnightRollover()

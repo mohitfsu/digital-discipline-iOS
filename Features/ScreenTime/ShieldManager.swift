@@ -56,16 +56,19 @@ public final class ShieldManager: ObservableObject {
             return
         }
         
-        // Apply Application Shields
-        store.shield.applications = activitySelection.applicationTokens.isEmpty ? nil : activitySelection.applicationTokens
+        // Apply Application Tokens if available
+        if !activitySelection.applicationTokens.isEmpty {
+            store.shield.applications = activitySelection.applicationTokens
+        }
         
-        // Apply Category Shields
+        // Apply Category Shields: If specific categories selected, shield those; otherwise shield all categories
         if !activitySelection.categoryTokens.isEmpty {
             store.shield.applicationCategories = .specific(activitySelection.categoryTokens)
             store.shield.webDomainCategories = .specific(activitySelection.categoryTokens)
         } else {
-            store.shield.applicationCategories = nil
-            store.shield.webDomainCategories = nil
+            // Shield all distracting categories at the OS kernel level
+            store.shield.applicationCategories = .all()
+            store.shield.webDomainCategories = .all()
         }
         
         // Apply Anti-Tamper Policies if enabled in active profile
@@ -105,13 +108,8 @@ public final class ShieldManager: ObservableObject {
     /// Configures anti-removal, date & time lockout, and iCloud account sign-out restrictions
     public func applyAntiTamperPolicies(enabled: Bool) {
         if enabled {
-            // Anti-Uninstall Lockout: Prevents deleting the app from iOS Home Screen
             store.application.denyAppRemoval = true
-            
-            // Anti-Clock Tamper: Forces automatic time to prevent bypassing schedules
             store.dateAndTime.requireAutomaticDateAndTime = true
-            
-            // Account Lockout: Prevents modifying or signing out of iCloud
             store.account.lockAccounts = true
         } else {
             store.application.denyAppRemoval = false
