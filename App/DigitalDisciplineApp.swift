@@ -14,7 +14,7 @@ struct DigitalDisciplineApp: App {
     
     var body: some Scene {
         WindowGroup {
-            ParentDashboardView()
+            MainAppTabView()
                 .preferredColorScheme(.dark)
                 .onOpenURL { url in
                     router.handleDeepLink(url: url)
