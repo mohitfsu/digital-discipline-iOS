@@ -625,3 +625,82 @@ public struct FocusHomeView: View {
         }
     }
 }
+
+/// One Sec-style Shortcuts Automation Guide View
+public struct ShortcutsAutomationGuideView: View {
+    @Environment(\.dismiss) private var dismiss
+    
+    public init() {}
+    
+    public var body: some View {
+        ZStack {
+            Color.ddBgDeep.ignoresSafeArea()
+            
+            VStack(spacing: 24) {
+                // Header
+                HStack {
+                    Text("Auto-Trap Instagram")
+                        .font(.system(size: 20, weight: .bold, design: .rounded))
+                        .foregroundColor(.ddTextPrimary)
+                    Spacer()
+                    Button {
+                        dismiss()
+                    } label: {
+                        Image(systemName: "xmark.circle.fill")
+                            .font(.system(size: 24))
+                            .foregroundColor(Color.ddTextSecondary)
+                    }
+                }
+                
+                VStack(alignment: .leading, spacing: 14) {
+                    guideStepRow(step: "1", title: "Open Apple 'Shortcuts' App", desc: "Tap the 'Automation' tab at the bottom.")
+                    guideStepRow(step: "2", title: "Create Personal Automation", desc: "Select 'App' -> Choose 'Instagram' -> Is Opened.")
+                    guideStepRow(step: "3", title: "Add 'Open App' Action", desc: "Choose 'Open Digital Discipline' -> Turn OFF 'Ask Before Running'.")
+                }
+                .padding(16)
+                .background(Color.ddBgCard)
+                .cornerRadius(16)
+                
+                Button {
+                    if let url = URL(string: "shortcuts://") {
+                        if UIApplication.shared.canOpenURL(url) {
+                            UIApplication.shared.open(url)
+                        }
+                    }
+                    dismiss()
+                } label: {
+                    Text("Open Shortcuts App Now")
+                        .font(.system(size: 15, weight: .bold))
+                        .foregroundColor(.white)
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, 14)
+                        .background(Color.ddAccentSky)
+                        .cornerRadius(14)
+                }
+                
+                Spacer()
+            }
+            .padding(24)
+        }
+    }
+    
+    private func guideStepRow(step: String, title: String, desc: String) -> some View {
+        HStack(alignment: .top, spacing: 12) {
+            Text(step)
+                .font(.system(size: 12, weight: .black, design: .monospaced))
+                .foregroundColor(Color.ddAccentSky)
+                .frame(width: 24, height: 24)
+                .background(Color.ddAccentSky.opacity(0.15))
+                .clipShape(Circle())
+            
+            VStack(alignment: .leading, spacing: 2) {
+                Text(title)
+                    .font(.system(size: 14, weight: .bold))
+                    .foregroundColor(.ddTextPrimary)
+                Text(desc)
+                    .font(.system(size: 12))
+                    .foregroundColor(Color.ddTextSecondary)
+            }
+        }
+    }
+}
