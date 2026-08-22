@@ -1,7 +1,7 @@
 import SwiftUI
 import FamilyControls
 
-/// Master Dark OLED TodayScreen & Daily Friction Dashboard (Adaptive to Profile Mode)
+/// Master Dark OLED TodayScreen & Daily Friction Dashboard (Zero-Hurdle Friction Launcher)
 public struct FocusHomeView: View {
     @ObservedObject var shieldManager = ShieldManager.shared
     @ObservedObject var dataStore = SharedDataStore.shared
@@ -11,8 +11,8 @@ public struct FocusHomeView: View {
     @State private var isWorkoutModalPresented = false
     @State private var isUrgeModalPresented = false
     @State private var isZenEnsoPresented = false
-    @State private var isShortcutsGuidePresented = false
     @State private var selectedInterventionToRun: InterventionType = .pushUps
+    @State private var targetAppToLaunchAfterWorkout: String? = "Instagram"
     
     public init() {}
     
@@ -47,7 +47,12 @@ public struct FocusHomeView: View {
                 InterventionRunnerView(
                     intervention: selectedInterventionToRun,
                     unlockDurationMinutes: dataStore.activeProfile.temporaryUnlockMinutes
-                )
+                ) {
+                    // Auto-launch target app after completing workout
+                    if let appName = targetAppToLaunchAfterWorkout {
+                        launchAppByName(appName)
+                    }
+                }
             }
             .fullScreenCover(isPresented: $isUrgeModalPresented) {
                 UrgeSurfingModalView()
@@ -56,9 +61,6 @@ public struct FocusHomeView: View {
                 ZenEnsoCanvasView(
                     unlockDurationMinutes: dataStore.activeProfile.temporaryUnlockMinutes
                 )
-            }
-            .sheet(isPresented: $isShortcutsGuidePresented) {
-                ShortcutsAutomationGuideView()
             }
         }
     }
@@ -72,9 +74,6 @@ public struct FocusHomeView: View {
         // 🔥 Viral Urge Surfing Panic Button
         urgeSurfingHeroButton
         
-        // ⚡ Shortcuts Auto-Trap Guide Card
-        shortcutsAutomationSetupCard
-        
         // Active Temporary Pass Countdown (if unlocked)
         if dataStore.isTemporaryUnlockActive() {
             activeTemporaryPassCard
@@ -85,11 +84,11 @@ public struct FocusHomeView: View {
         // Shield Control Action (Enforced / Protected status)
         shieldStatusBanner
         
+        // Target Shielded Apps with Interactive Friction Lockers
+        interactiveShieldedAppsSection
+        
         // Daily Summary Metrics
         metricsSummaryRow
-        
-        // Target Shielded Apps with Real Icons
-        shieldedAppsGrid
         
         // Intervention Categories & Quick Resets
         interventionCategoryExplorer
@@ -135,7 +134,7 @@ public struct FocusHomeView: View {
         
         quickFrictionUnlockCard
         shieldStatusBanner
-        shieldedAppsGrid
+        interactiveShieldedAppsSection
         interventionCategoryExplorer
     }
     
@@ -166,7 +165,7 @@ public struct FocusHomeView: View {
         
         quickFrictionUnlockCard
         shieldStatusBanner
-        shieldedAppsGrid
+        interactiveShieldedAppsSection
         interventionCategoryExplorer
     }
     
@@ -214,6 +213,7 @@ public struct FocusHomeView: View {
             
             // Quick Action Pill: + Earn 5 Mins Now
             Button {
+                targetAppToLaunchAfterWorkout = "Instagram"
                 selectedInterventionToRun = .pushUps
                 isWorkoutModalPresented = true
                 HapticFeedbackManager.shared.buttonTap()
@@ -283,51 +283,6 @@ public struct FocusHomeView: View {
         }
     }
     
-    // MARK: - Shortcuts Automation Setup Card (One Sec Style)
-    private var shortcutsAutomationSetupCard: some View {
-        Button {
-            isShortcutsGuidePresented = true
-            HapticFeedbackManager.shared.buttonTap()
-        } label: {
-            HStack(spacing: 14) {
-                ZStack {
-                    Circle()
-                        .fill(Color.ddAccentSky.opacity(0.15))
-                        .frame(width: 40, height: 40)
-                    Image(systemName: "bolt.badge.automatic.fill")
-                        .font(.system(size: 18))
-                        .foregroundColor(Color.ddAccentSky)
-                }
-                
-                VStack(alignment: .leading, spacing: 2) {
-                    Text("Auto-Trap Instagram Opens")
-                        .font(.system(size: 14, weight: .bold, design: .rounded))
-                        .foregroundColor(.ddTextPrimary)
-                    Text("Intercept Instagram opening $\\rightarrow$ Require 30s reset")
-                        .font(.system(size: 11))
-                        .foregroundColor(Color.ddTextSecondary)
-                }
-                
-                Spacer()
-                
-                Text("Setup")
-                    .font(.system(size: 11, weight: .bold))
-                    .foregroundColor(Color.ddAccentSky)
-                    .padding(.horizontal, 10)
-                    .padding(.vertical, 5)
-                    .background(Color.ddBgSubtle)
-                    .cornerRadius(8)
-            }
-            .padding(12)
-            .background(Color.ddBgCard)
-            .cornerRadius(14)
-            .overlay(
-                RoundedRectangle(cornerRadius: 14)
-                    .stroke(Color.ddAccentSky.opacity(0.4), lineWidth: 1)
-            )
-        }
-    }
-    
     // MARK: - Active Temporary Pass Card
     private var activeTemporaryPassCard: some View {
         VStack(spacing: 12) {
@@ -357,11 +312,7 @@ public struct FocusHomeView: View {
             }
             
             Button {
-                if let url = URL(string: "instagram://") {
-                    if UIApplication.shared.canOpenURL(url) {
-                        UIApplication.shared.open(url)
-                    }
-                }
+                launchAppByName("Instagram")
             } label: {
                 HStack(spacing: 8) {
                     Image(systemName: "arrow.up.right.square.fill")
@@ -393,6 +344,7 @@ public struct FocusHomeView: View {
     // MARK: - Quick Friction Unlock Card
     private var quickFrictionUnlockCard: some View {
         Button {
+            targetAppToLaunchAfterWorkout = "Instagram"
             selectedInterventionToRun = .pushUps
             isWorkoutModalPresented = true
             HapticFeedbackManager.shared.buttonTap()
@@ -417,16 +369,16 @@ public struct FocusHomeView: View {
                     Text("Need to Open Instagram?")
                         .font(.system(size: 14, weight: .bold, design: .rounded))
                         .foregroundColor(.ddTextPrimary)
-                    Text("Do 10 Push-ups / 30s Reset $\\rightarrow$ Earn \(dataStore.activeProfile.temporaryUnlockMinutes)m Pass")
+                    Text("Do 10 Push-ups / 30s Reset $\\rightarrow$ Unlock \(dataStore.activeProfile.temporaryUnlockMinutes)m Pass")
                         .font(.system(size: 11))
                         .foregroundColor(Color.ddTextSecondary)
                 }
                 
                 Spacer()
                 
-                Image(systemName: "play.circle.fill")
-                    .font(.system(size: 24))
-                    .foregroundColor(Color.ddAccentSky)
+                Image(systemName: "lock.fill")
+                    .font(.system(size: 20))
+                    .foregroundColor(Color.ddAccentAmber)
             }
             .padding(14)
             .background(Color.ddBgCard)
@@ -443,7 +395,7 @@ public struct FocusHomeView: View {
         HStack(spacing: 12) {
             Image(systemName: "shield.fill")
                 .foregroundColor(Color.ddAccentEmerald)
-            Text("PROTECTED • \(dataStore.shieldedTargetAppNames.count) Apps Shielded")
+            Text("PROTECTED • \(dataStore.shieldedTargetAppNames.count) Apps Friction Shielded")
                 .font(.system(size: 12, weight: .bold, design: .monospaced))
                 .foregroundColor(.ddTextPrimary)
             Spacer()
@@ -458,6 +410,83 @@ public struct FocusHomeView: View {
         .padding(12)
         .background(Color.ddBgCard)
         .cornerRadius(12)
+    }
+    
+    // MARK: - Interactive Shielded Apps Section
+    private var interactiveShieldedAppsSection: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            HStack {
+                Text("SHIELDED TARGET APPS")
+                    .font(.system(size: 10, weight: .bold, design: .monospaced))
+                    .foregroundColor(Color.ddTextSecondary)
+                Spacer()
+                Text("Tap App to Unlock")
+                    .font(.system(size: 10, weight: .bold))
+                    .foregroundColor(Color.ddAccentSky)
+            }
+            
+            VStack(spacing: 8) {
+                ForEach(dataStore.shieldedTargetAppNames, id: \.self) { appName in
+                    Button {
+                        targetAppToLaunchAfterWorkout = appName
+                        selectedInterventionToRun = .pushUps
+                        isWorkoutModalPresented = true
+                        HapticFeedbackManager.shared.buttonTap()
+                    } label: {
+                        HStack(spacing: 12) {
+                            ZStack {
+                                RoundedRectangle(cornerRadius: 8)
+                                    .fill(Color.ddAccentSky.opacity(0.15))
+                                    .frame(width: 36, height: 36)
+                                Image(systemName: appIconName(for: appName))
+                                    .font(.system(size: 16))
+                                    .foregroundColor(Color.ddAccentSky)
+                            }
+                            
+                            VStack(alignment: .leading, spacing: 2) {
+                                Text(appName)
+                                    .font(.system(size: 14, weight: .bold, design: .rounded))
+                                    .foregroundColor(.ddTextPrimary)
+                                Text("Locked • Tap to do 30s reset & launch")
+                                    .font(.system(size: 11))
+                                    .foregroundColor(Color.ddTextSecondary)
+                            }
+                            
+                            Spacer()
+                            
+                            Image(systemName: "lock.fill")
+                                .font(.system(size: 14))
+                                .foregroundColor(Color.ddAccentAmber)
+                        }
+                        .padding(12)
+                        .background(Color.ddBgCard)
+                        .cornerRadius(12)
+                        .overlay(
+                            RoundedRectangle(cornerRadius: 12)
+                                .stroke(Color.ddBorderDefault, lineWidth: 1)
+                        )
+                    }
+                }
+            }
+        }
+    }
+    
+    private func launchAppByName(_ name: String) {
+        let schemeMap: [String: String] = [
+            "Instagram": "instagram://",
+            "YouTube": "youtube://",
+            "WhatsApp": "whatsapp://",
+            "TikTok": "tiktok://",
+            "Twitter / X": "twitter://",
+            "Snapchat": "snapchat://",
+            "Netflix": "nflx://",
+            "Spotify": "spotify://"
+        ]
+        
+        let scheme = schemeMap[name] ?? "\(name.lowercased())://"
+        if let url = URL(string: scheme), UIApplication.shared.canOpenURL(url) {
+            UIApplication.shared.open(url)
+        }
     }
     
     // MARK: - Metrics Summary Row
@@ -487,43 +516,6 @@ public struct FocusHomeView: View {
         .cornerRadius(12)
     }
     
-    // MARK: - Shielded Apps Grid
-    private var shieldedAppsGrid: some View {
-        VStack(alignment: .leading, spacing: 10) {
-            Text("SHIELDED TARGET APPS")
-                .font(.system(size: 10, weight: .bold, design: .monospaced))
-                .foregroundColor(Color.ddTextSecondary)
-            
-            ScrollView(.horizontal, showsIndicators: false) {
-                HStack(spacing: 10) {
-                    ForEach(dataStore.shieldedTargetAppNames, id: \.self) { appName in
-                        HStack(spacing: 8) {
-                            Circle()
-                                .fill(Color.ddAccentSky.opacity(0.2))
-                                .frame(width: 24, height: 24)
-                                .overlay(
-                                    Image(systemName: appIconName(for: appName))
-                                        .font(.system(size: 10))
-                                        .foregroundColor(Color.ddAccentSky)
-                                )
-                            Text(appName)
-                                .font(.system(size: 12, weight: .bold))
-                                .foregroundColor(.ddTextPrimary)
-                        }
-                        .padding(.horizontal, 12)
-                        .padding(.vertical, 8)
-                        .background(Color.ddBgCard)
-                        .cornerRadius(10)
-                        .overlay(
-                            RoundedRectangle(cornerRadius: 10)
-                                .stroke(Color.ddBorderDefault, lineWidth: 1)
-                        )
-                    }
-                }
-            }
-        }
-    }
-    
     private func appIconName(for name: String) -> String {
         switch name {
         case "Instagram": return "camera.fill"
@@ -551,6 +543,7 @@ public struct FocusHomeView: View {
                     desc: "Vision AI form & chest-to-ground tracking",
                     badge: "+5 Mins",
                     action: {
+                        targetAppToLaunchAfterWorkout = "Instagram"
                         selectedInterventionToRun = .pushUps
                         isWorkoutModalPresented = true
                     }
@@ -562,6 +555,7 @@ public struct FocusHomeView: View {
                     desc: "Instant pause anti-cheat fold hold",
                     badge: "+5 Mins",
                     action: {
+                        targetAppToLaunchAfterWorkout = "Instagram"
                         selectedInterventionToRun = .childPose
                         isWorkoutModalPresented = true
                     }
@@ -583,6 +577,7 @@ public struct FocusHomeView: View {
                     desc: "4s Inhale • 7s Hold • 8s Exhale cycle",
                     badge: "+5 Mins",
                     action: {
+                        targetAppToLaunchAfterWorkout = "Instagram"
                         selectedInterventionToRun = .boxBreathing
                         isWorkoutModalPresented = true
                     }
@@ -622,85 +617,6 @@ public struct FocusHomeView: View {
                 RoundedRectangle(cornerRadius: 14)
                     .stroke(Color.ddBorderDefault, lineWidth: 1)
             )
-        }
-    }
-}
-
-/// One Sec-style Shortcuts Automation Guide View
-public struct ShortcutsAutomationGuideView: View {
-    @Environment(\.dismiss) private var dismiss
-    
-    public init() {}
-    
-    public var body: some View {
-        ZStack {
-            Color.ddBgDeep.ignoresSafeArea()
-            
-            VStack(spacing: 24) {
-                // Header
-                HStack {
-                    Text("Auto-Trap Instagram")
-                        .font(.system(size: 20, weight: .bold, design: .rounded))
-                        .foregroundColor(.ddTextPrimary)
-                    Spacer()
-                    Button {
-                        dismiss()
-                    } label: {
-                        Image(systemName: "xmark.circle.fill")
-                            .font(.system(size: 24))
-                            .foregroundColor(Color.ddTextSecondary)
-                    }
-                }
-                
-                VStack(alignment: .leading, spacing: 14) {
-                    guideStepRow(step: "1", title: "Open Apple 'Shortcuts' App", desc: "Tap the 'Automation' tab at the bottom.")
-                    guideStepRow(step: "2", title: "Create Personal Automation", desc: "Select 'App' -> Choose 'Instagram' -> Is Opened.")
-                    guideStepRow(step: "3", title: "Add 'Open App' Action", desc: "Choose 'Open Digital Discipline' -> Turn OFF 'Ask Before Running'.")
-                }
-                .padding(16)
-                .background(Color.ddBgCard)
-                .cornerRadius(16)
-                
-                Button {
-                    if let url = URL(string: "shortcuts://") {
-                        if UIApplication.shared.canOpenURL(url) {
-                            UIApplication.shared.open(url)
-                        }
-                    }
-                    dismiss()
-                } label: {
-                    Text("Open Shortcuts App Now")
-                        .font(.system(size: 15, weight: .bold))
-                        .foregroundColor(.white)
-                        .frame(maxWidth: .infinity)
-                        .padding(.vertical, 14)
-                        .background(Color.ddAccentSky)
-                        .cornerRadius(14)
-                }
-                
-                Spacer()
-            }
-            .padding(24)
-        }
-    }
-    
-    private func guideStepRow(step: String, title: String, desc: String) -> some View {
-        HStack(alignment: .top, spacing: 12) {
-            Text(step)
-                .font(.system(size: 12, weight: .black, design: .monospaced))
-                .foregroundColor(Color.ddAccentSky)
-                .frame(width: 24, height: 24)
-                .background(Color.ddAccentSky.opacity(0.15))
-                .clipShape(Circle())
-            
-            VStack(alignment: .leading, spacing: 2) {
-                Text(title)
-                    .font(.system(size: 14, weight: .bold))
-                    .foregroundColor(.ddTextPrimary)
-                Text(desc)
-                    .font(.system(size: 12))
-                    .foregroundColor(Color.ddTextSecondary)
-            }
         }
     }
 }
