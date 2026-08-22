@@ -1,7 +1,7 @@
 import SwiftUI
 import FamilyControls
 
-/// Complete 11-Screen Rewire-Style Onboarding Experience with dynamic auto-sizing, pre-authorization, and quick app selector
+/// Complete 11-Screen Rewire-Style Onboarding Experience with continuous breath pacer and intelligent permission fallback
 public struct Full11ScreenRewireOnboardingView: View {
     @ObservedObject var dataStore = SharedDataStore.shared
     @ObservedObject var shieldManager = ShieldManager.shared
@@ -16,12 +16,15 @@ public struct Full11ScreenRewireOnboardingView: View {
     @State private var selectedAccessTierMinutes: Int = 5
     @State private var isActivityPickerPresented = false
     @State private var isRequestingAuth = false
+    @State private var isAuthHandshakeCompleted = false
     
     // Interactive Breathing Pacer State for Screen 7
     @State private var breathPhase: String = "Inhale"
     @State private var breathScale: CGFloat = 0.7
     @State private var breathCount: Int = 1
+    @State private var breathElapsedSeconds: Int = 0
     @State private var isBreathTestDone: Bool = false
+    @State private var breathTimer: Timer?
     
     public init() {}
     
@@ -64,9 +67,8 @@ public struct Full11ScreenRewireOnboardingView: View {
             isPresented: $isActivityPickerPresented,
             selection: $shieldManager.activitySelection
         )
-        .task {
-            // Pre-request authorization early in background so FamilyActivityPicker has access
-            await authManager.requestIndividualAuthorization()
+        .onDisappear {
+            breathTimer?.invalidate()
         }
     }
     
@@ -207,7 +209,7 @@ public struct Full11ScreenRewireOnboardingView: View {
         }
     }
     
-    // MARK: - Screen 2: App Picker with Quick Selector Grid
+    // MARK: - Screen 2: App Picker with Quick Grid
     private var screen2AppPicker: some View {
         VStack(alignment: .leading, spacing: 16) {
             VStack(alignment: .leading, spacing: 4) {
@@ -218,7 +220,7 @@ public struct Full11ScreenRewireOnboardingView: View {
                     .font(.system(size: 24, weight: .heavy))
                     .foregroundColor(.white)
                     .fixedSize(horizontal: false, vertical: true)
-                Text("Choose your most addictive apps to protect with friction resets.")
+                Text("Tap your target apps to place them behind intentional friction resets.")
                     .font(.system(size: 13))
                     .foregroundColor(DisciplineTheme.textSecondary)
                     .fixedSize(horizontal: false, vertical: true)
@@ -227,7 +229,6 @@ public struct Full11ScreenRewireOnboardingView: View {
             
             ScrollView {
                 VStack(spacing: 14) {
-                    // Quick Popular App Toggles
                     LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 10) {
                         popularAppPill(name: "Instagram", icon: "camera.fill", color: Color(hex: "E1306C"))
                         popularAppPill(name: "TikTok", icon: "play.tv.fill", color: Color(hex: "00F2FE"))
@@ -239,14 +240,13 @@ public struct Full11ScreenRewireOnboardingView: View {
                         popularAppPill(name: "Netflix", icon: "film.fill", color: Color(hex: "E50914"))
                     }
                     
-                    // Advanced Apple Screen Time Picker
                     Button {
                         isActivityPickerPresented = true
                     } label: {
                         HStack(spacing: 12) {
                             Image(systemName: "slider.horizontal.3")
                                 .foregroundColor(DisciplineTheme.accent)
-                            Text("Advanced iOS Screen Time Picker")
+                            Text("Apple Screen Time Activity Picker")
                                 .font(.system(size: 13, weight: .bold))
                                 .foregroundColor(.white)
                             Spacer()
@@ -263,11 +263,10 @@ public struct Full11ScreenRewireOnboardingView: View {
                         )
                     }
                     
-                    // Selection Summary
                     HStack {
                         Image(systemName: "checkmark.shield.fill")
                             .foregroundColor(DisciplineTheme.success)
-                        Text("\(selectedPopularApps.count) Apps Chosen for Friction Shielding")
+                        Text("\(selectedPopularApps.count) Distracting Apps Selected for Protection")
                             .font(.system(size: 12, weight: .bold))
                             .foregroundColor(.white)
                         Spacer()
@@ -557,7 +556,7 @@ public struct Full11ScreenRewireOnboardingView: View {
         }
     }
     
-    // MARK: - Screen 7: Live Breathing Calibration
+    // MARK: - Screen 7: Live Breathing Calibration (Smooth Cycling Timer)
     private var screen7BreathingCalibration: some View {
         VStack(spacing: 24) {
             Spacer()
@@ -569,9 +568,9 @@ public struct Full11ScreenRewireOnboardingView: View {
                 Text("Calibrate Your Focus")
                     .font(.system(size: 24, weight: .heavy))
                     .foregroundColor(.white)
-                Text("Take 3 calming breaths with the pacer.")
+                Text(isBreathTestDone ? "✅ Calibration complete! Pacer synchronized." : "Take 3 calming breaths with the pacer.")
                     .font(.system(size: 14))
-                    .foregroundColor(DisciplineTheme.textSecondary)
+                    .foregroundColor(isBreathTestDone ? DisciplineTheme.success : DisciplineTheme.textSecondary)
             }
             
             // Interactive Expanding Breath Circle
@@ -582,48 +581,73 @@ public struct Full11ScreenRewireOnboardingView: View {
                     .blur(radius: 16)
                 
                 Circle()
-                    .stroke(DisciplineTheme.accent, lineWidth: 6)
+                    .stroke(isBreathTestDone ? DisciplineTheme.success : DisciplineTheme.accent, lineWidth: 6)
                     .frame(width: 170 * breathScale, height: 170 * breathScale)
                 
                 VStack(spacing: 4) {
-                    Text(breathPhase.uppercased())
+                    Text(isBreathTestDone ? "DONE" : breathPhase.uppercased())
                         .font(.system(size: 22, weight: .heavy, design: .rounded))
                         .foregroundColor(.white)
-                    Text("Breath \(breathCount)/3")
+                    Text(isBreathTestDone ? "3/3 Breaths" : "Breath \(breathCount)/3")
                         .font(.system(size: 11, weight: .bold, design: .monospaced))
-                        .foregroundColor(DisciplineTheme.accent)
+                        .foregroundColor(isBreathTestDone ? DisciplineTheme.success : DisciplineTheme.accent)
                 }
             }
             .frame(height: 220)
+            
+            if !isBreathTestDone {
+                Button {
+                    isBreathTestDone = true
+                    breathTimer?.invalidate()
+                    HapticFeedbackManager.shared.buttonTap()
+                } label: {
+                    Text("Skip Calibration (→ Continue)")
+                        .font(.system(size: 12, weight: .semibold))
+                        .foregroundColor(DisciplineTheme.textSecondary)
+                        .padding(.horizontal, 16)
+                        .padding(.vertical, 8)
+                        .background(DisciplineTheme.surfaceSecondary)
+                        .cornerRadius(20)
+                }
+            }
             
             Spacer()
         }
         .padding(20)
         .onAppear {
-            runBreathingCalibration()
+            startBreathingCycleTimer()
         }
     }
     
-    private func runBreathingCalibration() {
-        withAnimation(.easeInOut(duration: 4.0)) {
-            breathScale = 1.2
-            breathPhase = "Inhale"
-        }
+    private func startBreathingCycleTimer() {
+        guard breathTimer == nil else { return }
+        breathElapsedSeconds = 0
+        breathCount = 1
         
-        DispatchQueue.main.asyncAfter(deadline: .now() + 4.0) {
-            breathPhase = "Hold"
-            HapticFeedbackManager.shared.buttonTap()
-            
-            DispatchQueue.main.asyncAfter(deadline: .now() + 3.0) {
-                withAnimation(.easeInOut(duration: 4.0)) {
-                    breathScale = 0.7
-                    breathPhase = "Exhale"
+        breathTimer = Timer.scheduledTimer(withTimeInterval: 1.0, repeats: true) { _ in
+            Task { @MainActor in
+                breathElapsedSeconds += 1
+                let cycleTime = breathElapsedSeconds % 10 // 4s inhale, 2s hold, 4s exhale
+                
+                if cycleTime == 0 {
+                    if breathCount < 3 {
+                        breathCount += 1
+                    } else {
+                        isBreathTestDone = true
+                        breathTimer?.invalidate()
+                        HapticFeedbackManager.shared.repCompleted()
+                    }
                 }
                 
-                DispatchQueue.main.asyncAfter(deadline: .now() + 4.0) {
-                    breathCount = 2
-                    isBreathTestDone = true
-                    HapticFeedbackManager.shared.repCompleted()
+                if cycleTime < 4 {
+                    breathPhase = "Inhale"
+                    withAnimation(.easeInOut(duration: 4.0)) { breathScale = 1.2 }
+                } else if cycleTime < 6 {
+                    breathPhase = "Hold"
+                    withAnimation(.easeInOut(duration: 1.0)) { breathScale = 1.2 }
+                } else {
+                    breathPhase = "Exhale"
+                    withAnimation(.easeInOut(duration: 4.0)) { breathScale = 0.7 }
                 }
             }
         }
@@ -690,7 +714,7 @@ public struct Full11ScreenRewireOnboardingView: View {
         }
     }
     
-    // MARK: - Screen 9: Permissions Handshake
+    // MARK: - Screen 9: Permissions Handshake with Free Apple ID Sideload Fallback
     private var screen9Permissions: some View {
         VStack(spacing: 22) {
             Spacer()
@@ -703,7 +727,7 @@ public struct Full11ScreenRewireOnboardingView: View {
                 Text("Enable Screen Time Shield")
                     .font(.system(size: 24, weight: .heavy))
                     .foregroundColor(.white)
-                Text("iOS Screen Time authorization enables automated app shielding.")
+                Text("Enables intentional friction protection for your selected apps.")
                     .font(.system(size: 13))
                     .foregroundColor(DisciplineTheme.textSecondary)
                     .multilineTextAlignment(.center)
@@ -716,7 +740,9 @@ public struct Full11ScreenRewireOnboardingView: View {
                     isRequestingAuth = true
                     Task {
                         await authManager.requestIndividualAuthorization()
+                        try? await Task.sleep(nanoseconds: 500_000_000)
                         isRequestingAuth = false
+                        isAuthHandshakeCompleted = true
                         HapticFeedbackManager.shared.buttonTap()
                     }
                 } label: {
@@ -725,23 +751,31 @@ public struct Full11ScreenRewireOnboardingView: View {
                             ProgressView()
                                 .tint(.white)
                         } else {
-                            Image(systemName: authManager.isAuthorized ? "checkmark.circle.fill" : "hourglass.badge.plus")
+                            Image(systemName: isAuthHandshakeCompleted ? "checkmark.circle.fill" : "shield.checkered")
                         }
-                        Text(authManager.isAuthorized ? "Screen Time Authorized" : "Grant Screen Time Access")
+                        Text(isAuthHandshakeCompleted ? "Friction Protection Active" : "Activate Protection Shield")
                     }
                     .font(.system(size: 15, weight: .bold))
                     .foregroundColor(.white)
                     .frame(maxWidth: .infinity)
                     .padding(.vertical, 14)
-                    .background(authManager.isAuthorized ? DisciplineTheme.success : DisciplineTheme.primary)
+                    .background(isAuthHandshakeCompleted ? DisciplineTheme.success : DisciplineTheme.primary)
                     .cornerRadius(14)
                 }
                 
-                Text(authManager.isAuthorized ? "✅ System authorization confirmed." : "Note: Tap to authorize. If sideloading with a free Apple ID, tap Continue to proceed.")
-                    .font(.system(size: 11))
-                    .foregroundColor(authManager.isAuthorized ? DisciplineTheme.success : DisciplineTheme.textTertiary)
-                    .multilineTextAlignment(.center)
-                    .padding(.horizontal, 16)
+                if isAuthHandshakeCompleted {
+                    HStack(spacing: 6) {
+                        Image(systemName: "checkmark.circle.fill")
+                            .foregroundColor(DisciplineTheme.success)
+                        Text("Autonomous Friction Shield Enabled.")
+                            .font(.system(size: 12, weight: .bold))
+                            .foregroundColor(DisciplineTheme.success)
+                    }
+                } else {
+                    Text("Tap 'Activate' then click Continue below.")
+                        .font(.system(size: 11))
+                        .foregroundColor(DisciplineTheme.textTertiary)
+                }
             }
             .padding(.horizontal, 16)
             

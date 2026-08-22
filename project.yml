@@ -32,8 +32,8 @@ targets:
         PRODUCT_BUNDLE_IDENTIFIER: com.digitaldiscipline.DigitalDiscipline
         SKIP_INSTALL: "NO"
         INFOPLIST_FILE: App/Info.plist
-        GENERATE_INFOPLIST_FILE: "NO"
-        UILaunchStoryboardName: LaunchScreen
+        INFOPLIST_KEY_UILaunchScreen_Generation: "YES"
+        INFOPLIST_KEY_UIRequiresFullScreen: "YES"
         ASSETCATALOG_COMPILER_APPICON_NAME: ""
     dependencies:
       - target: DeviceActivityMonitorExtension
@@ -62,7 +62,6 @@ targets:
         PRODUCT_BUNDLE_IDENTIFIER: com.digitaldiscipline.DigitalDiscipline.DeviceActivityMonitorExtension
         SKIP_INSTALL: "YES"
         INFOPLIST_FILE: Extensions/DeviceActivityMonitorExtension/Info.plist
-        GENERATE_INFOPLIST_FILE: "NO"
     dependencies:
       - sdk: DeviceActivity.framework
       - sdk: ManagedSettings.framework
@@ -83,7 +82,6 @@ targets:
         PRODUCT_BUNDLE_IDENTIFIER: com.digitaldiscipline.DigitalDiscipline.ShieldConfigurationExtension
         SKIP_INSTALL: "YES"
         INFOPLIST_FILE: Extensions/ShieldConfigurationExtension/Info.plist
-        GENERATE_INFOPLIST_FILE: "NO"
     dependencies:
       - sdk: ManagedSettings.framework
       - sdk: ManagedSettingsUI.framework
@@ -103,6 +101,5 @@ targets:
         PRODUCT_BUNDLE_IDENTIFIER: com.digitaldiscipline.DigitalDiscipline.ShieldActionExtension
         SKIP_INSTALL: "YES"
         INFOPLIST_FILE: Extensions/ShieldActionExtension/Info.plist
-        GENERATE_INFOPLIST_FILE: "NO"
     dependencies:
       - sdk: ManagedSettings.framework

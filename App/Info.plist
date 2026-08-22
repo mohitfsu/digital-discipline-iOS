@@ -23,9 +23,22 @@
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
 	
-	<!-- Native Full-Screen Edge-to-Edge Rendering on all modern iPhones -->
+	<!-- Native Full-Screen Edge-to-Edge Launch Configuration -->
 	<key>UILaunchScreen</key>
-	<dict/>
+	<dict>
+		<key>UIColorName</key>
+		<string></string>
+		<key>UIImageName</key>
+		<string></string>
+	</dict>
+	
+	<key>UIRequiresFullScreen</key>
+	<true/>
+	
+	<key>UISupportedInterfaceOrientations</key>
+	<array>
+		<string>UIInterfaceOrientationPortrait</string>
+	</array>
 	
 	<!-- Privacy Permissions -->
 	<key>NSCameraUsageDescription</key>
