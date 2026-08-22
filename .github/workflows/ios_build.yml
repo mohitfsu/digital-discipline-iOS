@@ -47,41 +47,52 @@ jobs:
             exit 1
           fi
 
-      - name: Package App and Extensions into Standard IPA
+      - name: Package Sideloadly-Compatible IPA and Full Extensions IPA
         run: |
           echo "=== Inspecting Build Output ==="
           ls -la build/Debug-iphoneos/
           
-          # Ensure PlugIns directory exists inside the app
-          mkdir -p build/Debug-iphoneos/DigitalDiscipline.app/PlugIns
+          # 1. Package Sideloadly IPA (optimized for Free Apple IDs)
+          mkdir -p output_sideloadly/Payload
+          cp -R build/Debug-iphoneos/DigitalDiscipline.app output_sideloadly/Payload/
+          # Remove PlugIns from Sideloadly package to prevent free Apple ID IXPlaceholder error
+          rm -rf output_sideloadly/Payload/DigitalDiscipline.app/PlugIns
           
-          # Copy all extension .appex bundles into DigitalDiscipline.app/PlugIns/
+          cd output_sideloadly
+          zip -r -9 ../DigitalDiscipline.ipa Payload
+          cd ..
+          
+          # 2. Package Full IPA with embedded PlugIns extensions
+          mkdir -p output_full/Payload
+          cp -R build/Debug-iphoneos/DigitalDiscipline.app output_full/Payload/
+          mkdir -p output_full/Payload/DigitalDiscipline.app/PlugIns
           for appex in build/Debug-iphoneos/*.appex; do
             if [ -d "$appex" ]; then
-              echo "Embedding extension: $appex"
-              cp -R "$appex" build/Debug-iphoneos/DigitalDiscipline.app/PlugIns/
+              cp -R "$appex" output_full/Payload/DigitalDiscipline.app/PlugIns/
             fi
           done
           
-          # Verify the Mach-O binary exists and check its size
-          echo "=== Executable Binary Info ==="
-          ls -lh build/Debug-iphoneos/DigitalDiscipline.app/DigitalDiscipline || true
-          
-          # Copy full app to Payload for IPA
-          mkdir -p output/Payload
-          cp -R build/Debug-iphoneos/DigitalDiscipline.app output/Payload/
-          
-          # Package into standard IPA
-          cd output
-          zip -r -9 DigitalDiscipline.ipa Payload
+          cd output_full
+          zip -r -9 ../DigitalDiscipline-WithExtensions.ipa Payload
           cd ..
           
-          echo "=== Final IPA Size ==="
-          ls -lh output/DigitalDiscipline.ipa
+          echo "=== Final Sideloadly IPA File Info ==="
+          ls -lh DigitalDiscipline.ipa
+          
+          mkdir -p output
+          mv DigitalDiscipline.ipa output/
+          mv DigitalDiscipline-WithExtensions.ipa output/
 
-      - name: Upload Ready-to-Install IPA to GitHub
+      - name: Upload Sideloadly Compatible IPA
         uses: actions/upload-artifact@v4
         with:
-          name: DigitalDiscipline-IPA
+          name: DigitalDiscipline-Sideloadly-IPA
           path: output/DigitalDiscipline.ipa
+          retention-days: 14
+
+      - name: Upload Full IPA with Extensions
+        uses: actions/upload-artifact@v4
+        with:
+          name: DigitalDiscipline-Full-IPA
+          path: output/DigitalDiscipline-WithExtensions.ipa
           retention-days: 14
