@@ -1,7 +1,7 @@
 import SwiftUI
 import FamilyControls
 
-/// Complete 11-Screen Rewire-Style Onboarding Experience with dynamic auto-sizing and category detection
+/// Complete 11-Screen Rewire-Style Onboarding Experience with dynamic auto-sizing, pre-authorization, and quick app selector
 public struct Full11ScreenRewireOnboardingView: View {
     @ObservedObject var dataStore = SharedDataStore.shared
     @ObservedObject var shieldManager = ShieldManager.shared
@@ -11,9 +11,11 @@ public struct Full11ScreenRewireOnboardingView: View {
     @State private var currentStep: Int = 0
     @State private var selectedPatterns: Set<String> = ["I scroll longer than planned"]
     @State private var dailyHoursSpent: Double = 3.0
+    @State private var selectedPopularApps: Set<String> = ["Instagram", "TikTok", "YouTube"]
     @State private var selectedInterruptionStyles: Set<String> = ["Movement AI (Push-ups & Squats)", "Box Breathing & 4-7-8", "Zen Enso Canvas & Art"]
     @State private var selectedAccessTierMinutes: Int = 5
     @State private var isActivityPickerPresented = false
+    @State private var isRequestingAuth = false
     
     // Interactive Breathing Pacer State for Screen 7
     @State private var breathPhase: String = "Inhale"
@@ -62,6 +64,10 @@ public struct Full11ScreenRewireOnboardingView: View {
             isPresented: $isActivityPickerPresented,
             selection: $shieldManager.activitySelection
         )
+        .task {
+            // Pre-request authorization early in background so FamilyActivityPicker has access
+            await authManager.requestIndividualAuthorization()
+        }
     }
     
     // MARK: - Progress Bar
@@ -201,96 +207,115 @@ public struct Full11ScreenRewireOnboardingView: View {
         }
     }
     
-    // MARK: - Screen 2: App Picker
+    // MARK: - Screen 2: App Picker with Quick Selector Grid
     private var screen2AppPicker: some View {
-        VStack(alignment: .leading, spacing: 18) {
+        VStack(alignment: .leading, spacing: 16) {
             VStack(alignment: .leading, spacing: 4) {
                 Text("TARGET APPS")
                     .font(.system(size: 10, weight: .bold, design: .monospaced))
                     .foregroundColor(DisciplineTheme.accent)
-                Text("Choose Distracting Apps")
+                Text("Select Distracting Apps")
                     .font(.system(size: 24, weight: .heavy))
                     .foregroundColor(.white)
                     .fixedSize(horizontal: false, vertical: true)
-                Text("Select individual apps or full categories (like Social or Games).")
+                Text("Choose your most addictive apps to protect with friction resets.")
                     .font(.system(size: 13))
                     .foregroundColor(DisciplineTheme.textSecondary)
                     .fixedSize(horizontal: false, vertical: true)
             }
             .padding(.top, 12)
             
-            Button {
-                isActivityPickerPresented = true
-            } label: {
-                HStack(spacing: 14) {
-                    Image(systemName: "plus.app.fill")
-                        .font(.system(size: 24))
-                        .foregroundColor(DisciplineTheme.accent)
-                    VStack(alignment: .leading, spacing: 2) {
-                        Text("Open Screen Time Picker")
-                            .font(.system(size: 15, weight: .bold))
-                            .foregroundColor(.white)
-                        Text("Tap categories or expand to pick Instagram, TikTok, YouTube...")
-                            .font(.system(size: 11))
-                            .foregroundColor(DisciplineTheme.textSecondary)
-                            .multilineTextAlignment(.leading)
-                            .fixedSize(horizontal: false, vertical: true)
+            ScrollView {
+                VStack(spacing: 14) {
+                    // Quick Popular App Toggles
+                    LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 10) {
+                        popularAppPill(name: "Instagram", icon: "camera.fill", color: Color(hex: "E1306C"))
+                        popularAppPill(name: "TikTok", icon: "play.tv.fill", color: Color(hex: "00F2FE"))
+                        popularAppPill(name: "YouTube", icon: "play.rectangle.fill", color: Color(hex: "FF0000"))
+                        popularAppPill(name: "Twitter / X", icon: "message.fill", color: Color(hex: "38BDF8"))
+                        popularAppPill(name: "Reddit", icon: "bubble.left.and.bubble.right.fill", color: Color(hex: "FF4500"))
+                        popularAppPill(name: "Snapchat", icon: "ghost.fill", color: Color(hex: "FACC15"))
+                        popularAppPill(name: "Games", icon: "gamecontroller.fill", color: Color(hex: "A855F7"))
+                        popularAppPill(name: "Netflix", icon: "film.fill", color: Color(hex: "E50914"))
                     }
-                    Spacer()
-                    Image(systemName: "chevron.right")
-                        .foregroundColor(DisciplineTheme.textTertiary)
-                }
-                .padding(16)
-                .background(DisciplineTheme.surface)
-                .cornerRadius(16)
-                .overlay(
-                    RoundedRectangle(cornerRadius: 16)
-                        .stroke(DisciplineTheme.accent.opacity(0.3), lineWidth: 1)
-                )
-            }
-            
-            // Selection Status Card
-            VStack(alignment: .leading, spacing: 8) {
-                if shieldManager.activitySelection.applicationTokens.isEmpty && shieldManager.activitySelection.categoryTokens.isEmpty {
-                    HStack(spacing: 10) {
-                        Image(systemName: "exclamationmark.circle.fill")
-                            .foregroundColor(DisciplineTheme.warning)
-                        Text("No apps selected yet. Tap above to choose.")
-                            .font(.system(size: 12, weight: .medium))
+                    
+                    // Advanced Apple Screen Time Picker
+                    Button {
+                        isActivityPickerPresented = true
+                    } label: {
+                        HStack(spacing: 12) {
+                            Image(systemName: "slider.horizontal.3")
+                                .foregroundColor(DisciplineTheme.accent)
+                            Text("Advanced iOS Screen Time Picker")
+                                .font(.system(size: 13, weight: .bold))
+                                .foregroundColor(.white)
+                            Spacer()
+                            Image(systemName: "chevron.right")
+                                .font(.system(size: 11))
+                                .foregroundColor(DisciplineTheme.textTertiary)
+                        }
+                        .padding(14)
+                        .background(DisciplineTheme.surface)
+                        .cornerRadius(12)
+                        .overlay(
+                            RoundedRectangle(cornerRadius: 12)
+                                .stroke(DisciplineTheme.surfaceSecondary, lineWidth: 1)
+                        )
+                    }
+                    
+                    // Selection Summary
+                    HStack {
+                        Image(systemName: "checkmark.shield.fill")
+                            .foregroundColor(DisciplineTheme.success)
+                        Text("\(selectedPopularApps.count) Apps Chosen for Friction Shielding")
+                            .font(.system(size: 12, weight: .bold))
                             .foregroundColor(.white)
                         Spacer()
                     }
-                } else {
-                    HStack(spacing: 14) {
-                        if !shieldManager.activitySelection.applicationTokens.isEmpty {
-                            HStack(spacing: 6) {
-                                Image(systemName: "app.badge.checkmark.fill")
-                                    .foregroundColor(DisciplineTheme.success)
-                                Text("\(shieldManager.activitySelection.applicationTokens.count) Specific Apps")
-                                    .font(.system(size: 12, weight: .bold))
-                                    .foregroundColor(.white)
-                            }
-                        }
-                        if !shieldManager.activitySelection.categoryTokens.isEmpty {
-                            HStack(spacing: 6) {
-                                Image(systemName: "folder.badge.gearshape.fill")
-                                    .foregroundColor(DisciplineTheme.accent)
-                                Text("\(shieldManager.activitySelection.categoryTokens.count) Categories")
-                                    .font(.system(size: 12, weight: .bold))
-                                    .foregroundColor(.white)
-                            }
-                        }
-                        Spacer()
-                    }
+                    .padding(12)
+                    .background(DisciplineTheme.surfaceSecondary)
+                    .cornerRadius(12)
                 }
             }
-            .padding(12)
-            .background(DisciplineTheme.surfaceSecondary)
-            .cornerRadius(12)
             
             Spacer()
         }
         .padding(20)
+    }
+    
+    private func popularAppPill(name: String, icon: String, color: Color) -> some View {
+        let isSelected = selectedPopularApps.contains(name)
+        return Button {
+            if isSelected {
+                selectedPopularApps.remove(name)
+            } else {
+                selectedPopularApps.insert(name)
+            }
+            HapticFeedbackManager.shared.buttonTap()
+        } label: {
+            HStack(spacing: 10) {
+                Image(systemName: icon)
+                    .font(.system(size: 16, weight: .bold))
+                    .foregroundColor(color)
+                Text(name)
+                    .font(.system(size: 13, weight: .bold))
+                    .foregroundColor(.white)
+                    .lineLimit(1)
+                Spacer()
+                if isSelected {
+                    Image(systemName: "checkmark.circle.fill")
+                        .font(.system(size: 14))
+                        .foregroundColor(DisciplineTheme.accent)
+                }
+            }
+            .padding(12)
+            .background(isSelected ? DisciplineTheme.surfaceSecondary : DisciplineTheme.surface)
+            .cornerRadius(12)
+            .overlay(
+                RoundedRectangle(cornerRadius: 12)
+                    .stroke(isSelected ? DisciplineTheme.accent : DisciplineTheme.surfaceSecondary, lineWidth: isSelected ? 2 : 1)
+            )
+        }
     }
     
     // MARK: - Screen 3: Self-Reported Time
@@ -678,7 +703,7 @@ public struct Full11ScreenRewireOnboardingView: View {
                 Text("Enable Screen Time Shield")
                     .font(.system(size: 24, weight: .heavy))
                     .foregroundColor(.white)
-                Text("iOS requires Screen Time authorization to present mindful intervention shields.")
+                Text("iOS Screen Time authorization enables automated app shielding.")
                     .font(.system(size: 13))
                     .foregroundColor(DisciplineTheme.textSecondary)
                     .multilineTextAlignment(.center)
@@ -686,21 +711,37 @@ public struct Full11ScreenRewireOnboardingView: View {
                     .fixedSize(horizontal: false, vertical: true)
             }
             
-            Button {
-                Task {
-                    await authManager.requestIndividualAuthorization()
+            VStack(spacing: 12) {
+                Button {
+                    isRequestingAuth = true
+                    Task {
+                        await authManager.requestIndividualAuthorization()
+                        isRequestingAuth = false
+                        HapticFeedbackManager.shared.buttonTap()
+                    }
+                } label: {
+                    HStack(spacing: 8) {
+                        if isRequestingAuth {
+                            ProgressView()
+                                .tint(.white)
+                        } else {
+                            Image(systemName: authManager.isAuthorized ? "checkmark.circle.fill" : "hourglass.badge.plus")
+                        }
+                        Text(authManager.isAuthorized ? "Screen Time Authorized" : "Grant Screen Time Access")
+                    }
+                    .font(.system(size: 15, weight: .bold))
+                    .foregroundColor(.white)
+                    .frame(maxWidth: .infinity)
+                    .padding(.vertical, 14)
+                    .background(authManager.isAuthorized ? DisciplineTheme.success : DisciplineTheme.primary)
+                    .cornerRadius(14)
                 }
-            } label: {
-                HStack(spacing: 8) {
-                    Image(systemName: authManager.isAuthorized ? "checkmark.circle.fill" : "hourglass.badge.plus")
-                    Text(authManager.isAuthorized ? "Screen Time Authorized" : "Grant Screen Time Access")
-                }
-                .font(.system(size: 15, weight: .bold))
-                .foregroundColor(.white)
-                .frame(maxWidth: .infinity)
-                .padding(.vertical, 14)
-                .background(authManager.isAuthorized ? DisciplineTheme.success : DisciplineTheme.primary)
-                .cornerRadius(14)
+                
+                Text(authManager.isAuthorized ? "✅ System authorization confirmed." : "Note: Tap to authorize. If sideloading with a free Apple ID, tap Continue to proceed.")
+                    .font(.system(size: 11))
+                    .foregroundColor(authManager.isAuthorized ? DisciplineTheme.success : DisciplineTheme.textTertiary)
+                    .multilineTextAlignment(.center)
+                    .padding(.horizontal, 16)
             }
             .padding(.horizontal, 16)
             
@@ -727,7 +768,7 @@ public struct Full11ScreenRewireOnboardingView: View {
                 Text("Your Plan Is Active!")
                     .font(.system(size: 26, weight: .black, design: .rounded))
                     .foregroundColor(.white)
-                Text("Your Dopamine Wallet is primed. Each friction challenge will grant you a \(selectedAccessTierMinutes)-minute focus pass.")
+                Text("Your Dopamine Wallet is primed with \(selectedPopularApps.count) target apps. Each friction challenge will grant you a \(selectedAccessTierMinutes)-minute focus pass.")
                     .font(.system(size: 13))
                     .foregroundColor(DisciplineTheme.textSecondary)
                     .multilineTextAlignment(.center)
