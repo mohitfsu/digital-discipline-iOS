@@ -28,6 +28,11 @@ public final class HapticFeedbackManager {
         impactMedium.impactOccurred(intensity: 1.0)
     }
     
+    /// Triggered upon successful rep / breath cycle validation
+    public func repSuccess() {
+        impactMedium.impactOccurred(intensity: 1.0)
+    }
+    
     /// Triggered when user reaches bottom squat position
     public func bottomSquatReached() {
         impactLight.impactOccurred(intensity: 0.8)
