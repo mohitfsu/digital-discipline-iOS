@@ -14,11 +14,11 @@ public struct SettingsHubView: View {
     public var body: some View {
         NavigationStack {
             ZStack {
-                DisciplineTheme.background.ignoresSafeArea()
+                Color.ddBgDeep.ignoresSafeArea()
                 
                 ScrollView {
                     VStack(spacing: 20) {
-                        // Permissions Status Section
+                        // Permissions & Shielding Status
                         permissionsSection
                         
                         // Security & Anti-Tamper Section
@@ -49,72 +49,61 @@ public struct SettingsHubView: View {
     // MARK: - Permissions Section
     private var permissionsSection: some View {
         VStack(alignment: .leading, spacing: 12) {
-            Text("PERMISSIONS & SYSTEM INTEGRATION")
+            Text("PROTECTION & SYSTEM INTEGRATION")
                 .font(.system(size: 10, weight: .bold, design: .monospaced))
-                .foregroundColor(DisciplineTheme.textSecondary)
+                .foregroundColor(Color.ddTextSecondary)
             
             VStack(spacing: 0) {
                 HStack(spacing: 12) {
-                    Image(systemName: "hourglass.badge.plus")
+                    Image(systemName: "lock.shield.fill")
                         .font(.system(size: 16))
-                        .foregroundColor(DisciplineTheme.accent)
+                        .foregroundColor(Color.ddAccentEmerald)
                     
                     VStack(alignment: .leading, spacing: 2) {
-                        Text("Screen Time Access")
-                            .font(.system(size: 14, weight: .bold))
-                            .foregroundColor(.white)
-                        Text(authManager.isAuthorized ? "Authorized • Shielding Active" : "Permission Required for App Blocking")
+                        Text("Focus Shield Protection")
+                            .font(.system(size: 14, weight: .bold, design: .rounded))
+                            .foregroundColor(.ddTextPrimary)
+                        Text("Active • \(dataStore.shieldedTargetAppNames.count) Apps Protected with Friction")
                             .font(.system(size: 11))
-                            .foregroundColor(authManager.isAuthorized ? DisciplineTheme.success : DisciplineTheme.warning)
-                    }
-                    
-                    Spacer()
-                    
-                    if !authManager.isAuthorized {
-                        Button("Authorize") {
-                            Task {
-                                await authManager.requestIndividualAuthorization()
-                            }
-                        }
-                        .font(.system(size: 12, weight: .bold))
-                        .foregroundColor(.white)
-                        .padding(.horizontal, 12)
-                        .padding(.vertical, 6)
-                        .background(DisciplineTheme.primary)
-                        .cornerRadius(8)
-                    }
-                }
-                .padding(14)
-                
-                Divider()
-                    .background(DisciplineTheme.surfaceSecondary)
-                
-                HStack(spacing: 12) {
-                    Image(systemName: "camera.fill")
-                        .font(.system(size: 16))
-                        .foregroundColor(DisciplineTheme.primary)
-                    
-                    VStack(alignment: .leading, spacing: 2) {
-                        Text("Camera AI (Vision)")
-                            .font(.system(size: 14, weight: .bold))
-                            .foregroundColor(.white)
-                        Text("On-device Pose & Object Detection")
-                            .font(.system(size: 11))
-                            .foregroundColor(DisciplineTheme.textSecondary)
+                            .foregroundColor(Color.ddAccentEmerald)
                     }
                     
                     Spacer()
                     
                     Image(systemName: "checkmark.circle.fill")
-                        .foregroundColor(DisciplineTheme.success)
+                        .foregroundColor(Color.ddAccentEmerald)
+                }
+                .padding(14)
+                
+                Divider()
+                    .background(Color.ddBgSubtle)
+                
+                HStack(spacing: 12) {
+                    Image(systemName: "camera.fill")
+                        .font(.system(size: 16))
+                        .foregroundColor(Color.ddAccentSky)
+                    
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text("Camera AI (Vision)")
+                            .font(.system(size: 14, weight: .bold, design: .rounded))
+                            .foregroundColor(.ddTextPrimary)
+                        Text("On-device Pose & Rep Counter Engine")
+                            .font(.system(size: 11))
+                            .foregroundColor(Color.ddTextSecondary)
+                    }
+                    
+                    Spacer()
+                    
+                    Image(systemName: "checkmark.circle.fill")
+                        .foregroundColor(Color.ddAccentEmerald)
                 }
                 .padding(14)
             }
-            .background(DisciplineTheme.surface)
+            .background(Color.ddBgCard)
             .cornerRadius(16)
             .overlay(
                 RoundedRectangle(cornerRadius: 16)
-                    .stroke(DisciplineTheme.surfaceSecondary, lineWidth: 1)
+                    .stroke(Color.ddBorderDefault, lineWidth: 1)
             )
         }
     }
@@ -124,22 +113,22 @@ public struct SettingsHubView: View {
         VStack(alignment: .leading, spacing: 12) {
             Text("SECURITY & HARD LOCKOUT")
                 .font(.system(size: 10, weight: .bold, design: .monospaced))
-                .foregroundColor(DisciplineTheme.textSecondary)
+                .foregroundColor(Color.ddTextSecondary)
             
             VStack(spacing: 0) {
                 // Anti-Uninstall Lockout Toggle
                 HStack {
                     Image(systemName: "lock.shield.fill")
                         .font(.system(size: 16))
-                        .foregroundColor(DisciplineTheme.danger)
+                        .foregroundColor(Color.ddAccentRose)
                     
                     VStack(alignment: .leading, spacing: 2) {
                         Text("Anti-Uninstall & Tamper Lock")
-                            .font(.system(size: 14, weight: .bold))
-                            .foregroundColor(.white)
+                            .font(.system(size: 14, weight: .bold, design: .rounded))
+                            .foregroundColor(.ddTextPrimary)
                         Text("Prevents app deletion and date/time modification")
                             .font(.system(size: 11))
-                            .foregroundColor(DisciplineTheme.textSecondary)
+                            .foregroundColor(Color.ddTextSecondary)
                     }
                     
                     Spacer()
@@ -153,12 +142,12 @@ public struct SettingsHubView: View {
                         }
                     ))
                     .labelsHidden()
-                    .tint(DisciplineTheme.danger)
+                    .tint(Color.ddAccentRose)
                 }
                 .padding(14)
                 
                 Divider()
-                    .background(DisciplineTheme.surfaceSecondary)
+                    .background(Color.ddBgSubtle)
                 
                 // Parent PIN Lockout Configuration
                 Button {
@@ -167,31 +156,31 @@ public struct SettingsHubView: View {
                     HStack(spacing: 12) {
                         Image(systemName: "key.fill")
                             .font(.system(size: 16))
-                            .foregroundColor(DisciplineTheme.warning)
+                            .foregroundColor(Color.ddAccentAmber)
                         
                         VStack(alignment: .leading, spacing: 2) {
                             Text("Parent Security PIN")
-                                .font(.system(size: 14, weight: .bold))
-                                .foregroundColor(.white)
-                            Text("Require 6-digit PIN to modify profiles")
+                                .font(.system(size: 14, weight: .bold, design: .rounded))
+                                .foregroundColor(.ddTextPrimary)
+                            Text("Require 6-digit PIN to modify policies")
                                 .font(.system(size: 11))
-                                .foregroundColor(DisciplineTheme.textSecondary)
+                                .foregroundColor(Color.ddTextSecondary)
                         }
                         
                         Spacer()
                         
                         Image(systemName: "chevron.right")
                             .font(.system(size: 12, weight: .bold))
-                            .foregroundColor(DisciplineTheme.textTertiary)
+                            .foregroundColor(Color.ddTextMuted)
                     }
                     .padding(14)
                 }
             }
-            .background(DisciplineTheme.surface)
+            .background(Color.ddBgCard)
             .cornerRadius(16)
             .overlay(
                 RoundedRectangle(cornerRadius: 16)
-                    .stroke(DisciplineTheme.surfaceSecondary, lineWidth: 1)
+                    .stroke(Color.ddBorderDefault, lineWidth: 1)
             )
         }
     }
@@ -204,34 +193,34 @@ public struct SettingsHubView: View {
             HStack(spacing: 12) {
                 ZStack {
                     Circle()
-                        .fill(DisciplineTheme.accent.opacity(0.15))
+                        .fill(Color.ddAccentSky.opacity(0.15))
                         .frame(width: 40, height: 40)
                     Image(systemName: "cloud.fill")
                         .font(.system(size: 18))
-                        .foregroundColor(DisciplineTheme.accent)
+                        .foregroundColor(Color.ddAccentSky)
                 }
                 
                 VStack(alignment: .leading, spacing: 2) {
                     Text("Cloud Pairing Hub")
-                        .font(.system(size: 14, weight: .bold))
-                        .foregroundColor(.white)
+                        .font(.system(size: 14, weight: .bold, design: .rounded))
+                        .foregroundColor(.ddTextPrimary)
                     Text("Pair devices via Firestore telemetry sync")
                         .font(.system(size: 11))
-                        .foregroundColor(DisciplineTheme.textSecondary)
+                        .foregroundColor(Color.ddTextSecondary)
                 }
                 
                 Spacer()
                 
                 Image(systemName: "chevron.right")
                     .font(.system(size: 12, weight: .bold))
-                    .foregroundColor(DisciplineTheme.textTertiary)
+                    .foregroundColor(Color.ddTextMuted)
             }
             .padding(14)
-            .background(DisciplineTheme.surface)
+            .background(Color.ddBgCard)
             .cornerRadius(16)
             .overlay(
                 RoundedRectangle(cornerRadius: 16)
-                    .stroke(DisciplineTheme.surfaceSecondary, lineWidth: 1)
+                    .stroke(Color.ddBorderDefault, lineWidth: 1)
             )
         }
     }
@@ -248,23 +237,23 @@ public struct SettingsHubView: View {
                     Text("Re-run Guided Setup Flow")
                 }
                 .font(.system(size: 13, weight: .bold))
-                .foregroundColor(DisciplineTheme.accent)
+                .foregroundColor(Color.ddAccentSky)
                 .padding(.vertical, 10)
                 .frame(maxWidth: .infinity)
-                .background(DisciplineTheme.surface)
+                .background(Color.ddBgCard)
                 .cornerRadius(12)
                 .overlay(
                     RoundedRectangle(cornerRadius: 12)
-                        .stroke(DisciplineTheme.surfaceSecondary, lineWidth: 1)
+                        .stroke(Color.ddBorderDefault, lineWidth: 1)
                 )
             }
             
             Text("Digital Discipline v1.0.0 (Native Swift 6)")
                 .font(.system(size: 11, weight: .bold, design: .monospaced))
-                .foregroundColor(DisciplineTheme.textTertiary)
-            Text("Apple Screen Time & Vision AI Powered • 42 Interventions")
+                .foregroundColor(Color.ddTextMuted)
+            Text("Apple Vision AI Powered • 42 Interventions")
                 .font(.system(size: 10))
-                .foregroundColor(DisciplineTheme.textTertiary)
+                .foregroundColor(Color.ddTextMuted)
         }
         .frame(maxWidth: .infinity)
         .padding(.top, 12)

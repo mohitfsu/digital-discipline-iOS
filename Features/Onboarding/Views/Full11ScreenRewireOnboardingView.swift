@@ -1,7 +1,7 @@
 import SwiftUI
 import FamilyControls
 
-/// Complete 11-Screen Rewire-Style Onboarding Experience with zero-balance wallet start and safe area top spacing
+/// Complete 11-Screen Rewire-Style Onboarding Experience with real installed app detection and safe area spacing
 public struct Full11ScreenRewireOnboardingView: View {
     @ObservedObject var dataStore = SharedDataStore.shared
     @ObservedObject var shieldManager = ShieldManager.shared
@@ -11,10 +11,10 @@ public struct Full11ScreenRewireOnboardingView: View {
     @State private var currentStep: Int = 0
     @State private var selectedPatterns: Set<String> = ["I scroll longer than planned"]
     @State private var dailyHoursSpent: Double = 3.0
-    @State private var selectedPopularApps: Set<String> = ["Instagram", "TikTok", "YouTube"]
+    @State private var installedApps: [DeviceInstalledApp] = []
+    @State private var selectedAppNames: Set<String> = []
     @State private var selectedInterventionCategories: Set<String> = ["MOVE", "BREATHE", "RESET", "CREATE"]
     @State private var selectedAccessTierMinutes: Int = 5
-    @State private var isActivityPickerPresented = false
     @State private var isAuthHandshakeCompleted = false
     
     // Interactive Breathing Pacer State for Screen 7
@@ -36,15 +36,17 @@ public struct Full11ScreenRewireOnboardingView: View {
                 if currentStep > 0 && currentStep < 10 {
                     progressBar
                         .padding(.horizontal, 24)
-                        .padding(.top, 44) // Safe spacing below Dynamic Island
-                        .padding(.bottom, 8)
+                        .padding(.top, 52) // Ample spacing below Dynamic Island
+                        .padding(.bottom, 12)
+                } else {
+                    Spacer().frame(height: 48)
                 }
                 
                 // Screen Content
                 TabView(selection: $currentStep) {
                     screen0Manifesto.tag(0)
                     screen1Patterns.tag(1)
-                    screen2AppPicker.tag(2)
+                    screen2InstalledAppsPicker.tag(2)
                     screen3TimeSpent.tag(3)
                     screen4LifetimeLoss.tag(4)
                     screen5TheReframe.tag(5)
@@ -57,18 +59,26 @@ public struct Full11ScreenRewireOnboardingView: View {
                 .tabViewStyle(.page(indexDisplayMode: .never))
                 .animation(.spring(response: 0.38, dampingFraction: 0.82), value: currentStep)
                 
-                // Bottom Navigation
+                // Bottom Navigation Controls
                 bottomNavigationControls
                     .padding(.horizontal, 24)
-                    .padding(.bottom, 24)
+                    .padding(.bottom, 28)
             }
         }
-        .familyActivityPicker(
-            isPresented: $isActivityPickerPresented,
-            selection: $shieldManager.activitySelection
-        )
+        .onAppear {
+            loadInstalledApps()
+        }
         .onDisappear {
             breathTimer?.invalidate()
+        }
+    }
+    
+    private func loadInstalledApps() {
+        let detected = InstalledAppsDetector.shared.getInstalledAppsOnDevice()
+        self.installedApps = detected
+        // Auto-select first 2-3 installed apps by default
+        if selectedAppNames.isEmpty {
+            self.selectedAppNames = Set(detected.prefix(3).map { $0.name })
         }
     }
     
@@ -161,7 +171,7 @@ public struct Full11ScreenRewireOnboardingView: View {
                     .foregroundColor(.ddTextPrimary)
                     .fixedSize(horizontal: false, vertical: true)
             }
-            .padding(.top, 8)
+            .padding(.top, 4)
             
             VStack(spacing: 10) {
                 PremiumSelectCard(
@@ -210,64 +220,85 @@ public struct Full11ScreenRewireOnboardingView: View {
         }
     }
     
-    // MARK: - Screen 2: Distraction App Selection
-    private var screen2AppPicker: some View {
+    // MARK: - Screen 2: Real Installed Apps on Device (No Category Grouping)
+    private var screen2InstalledAppsPicker: some View {
         VStack(alignment: .leading, spacing: 16) {
             VStack(alignment: .leading, spacing: 4) {
-                Text("TARGET APPS")
+                Text("INSTALLED ON YOUR PHONE")
                     .font(.system(size: 10, weight: .bold, design: .monospaced))
                     .foregroundColor(Color.ddAccentSky)
-                Text("Choose Distracting Apps")
+                Text("Select Apps to Shield")
                     .font(.system(size: 24, weight: .heavy, design: .rounded))
                     .foregroundColor(.ddTextPrimary)
                     .fixedSize(horizontal: false, vertical: true)
-                Text("Select the apps you want protected behind physical friction resets.")
+                Text("Only apps found on your phone are listed, sorted with most used on top.")
                     .font(.system(size: 13))
                     .foregroundColor(Color.ddTextSecondary)
                     .fixedSize(horizontal: false, vertical: true)
             }
-            .padding(.top, 8)
+            .padding(.top, 4)
             
             ScrollView {
-                VStack(spacing: 14) {
-                    LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 10) {
-                        appIconPill(name: "Instagram", icon: "camera.fill", bgGradient: [Color(hex: "833AB4"), Color(hex: "FD1D1D"), Color(hex: "FCB045")])
-                        appIconPill(name: "TikTok", icon: "play.tv.fill", bgGradient: [Color(hex: "00F2FE"), Color(hex: "4FACFE")])
-                        appIconPill(name: "YouTube", icon: "play.rectangle.fill", bgGradient: [Color(hex: "FF0000"), Color(hex: "CC0000")])
-                        appIconPill(name: "Twitter / X", icon: "message.fill", bgGradient: [Color(hex: "1DA1F2"), Color(hex: "0EA5E9")])
-                        appIconPill(name: "Reddit", icon: "bubble.left.and.bubble.right.fill", bgGradient: [Color(hex: "FF4500"), Color(hex: "FF8700")])
-                        appIconPill(name: "Snapchat", icon: "ghost.fill", bgGradient: [Color(hex: "FFFC00"), Color(hex: "F59E0B")])
-                        appIconPill(name: "Games", icon: "gamecontroller.fill", bgGradient: [Color(hex: "8B5CF6"), Color(hex: "6D28D9")])
-                        appIconPill(name: "Netflix", icon: "film.fill", bgGradient: [Color(hex: "E50914"), Color(hex: "B81D24")])
-                    }
-                    
-                    Button {
-                        isActivityPickerPresented = true
-                    } label: {
-                        HStack(spacing: 12) {
-                            Image(systemName: "slider.horizontal.3")
-                                .foregroundColor(Color.ddAccentSky)
-                            Text("Apple Screen Time Activity Picker")
-                                .font(.system(size: 13, weight: .bold))
-                                .foregroundColor(.ddTextPrimary)
-                            Spacer()
-                            Image(systemName: "chevron.right")
-                                .font(.system(size: 11))
-                                .foregroundColor(Color.ddTextMuted)
+                VStack(spacing: 10) {
+                    ForEach(installedApps) { app in
+                        let isSelected = selectedAppNames.contains(app.name)
+                        let gradientColors = app.gradientColors.map { Color(hex: $0) }
+                        
+                        Button {
+                            if isSelected {
+                                selectedAppNames.remove(app.name)
+                            } else {
+                                selectedAppNames.insert(app.name)
+                            }
+                            HapticFeedbackManager.shared.buttonTap()
+                        } label: {
+                            HStack(spacing: 14) {
+                                ZStack {
+                                    RoundedRectangle(cornerRadius: 10)
+                                        .fill(LinearGradient(colors: gradientColors, startPoint: .topLeading, endPoint: .bottomTrailing))
+                                        .frame(width: 38, height: 38)
+                                    Image(systemName: app.iconName)
+                                        .font(.system(size: 16, weight: .bold))
+                                        .foregroundColor(.white)
+                                }
+                                
+                                VStack(alignment: .leading, spacing: 2) {
+                                    Text(app.name)
+                                        .font(.system(size: 15, weight: .bold, design: .rounded))
+                                        .foregroundColor(.ddTextPrimary)
+                                    Text("Installed • Shield with 30s reset")
+                                        .font(.system(size: 11))
+                                        .foregroundColor(Color.ddTextSecondary)
+                                }
+                                
+                                Spacer()
+                                
+                                ZStack {
+                                    Circle()
+                                        .stroke(isSelected ? Color.ddAccentSky : Color.ddBorderDefault, lineWidth: 2)
+                                        .frame(width: 22, height: 22)
+                                    if isSelected {
+                                        Circle()
+                                            .fill(Color.ddAccentSky)
+                                            .frame(width: 12, height: 12)
+                                    }
+                                }
+                            }
+                            .padding(14)
+                            .background(isSelected ? Color.ddBgSubtle : Color.ddBgCard)
+                            .cornerRadius(14)
+                            .overlay(
+                                RoundedRectangle(cornerRadius: 14)
+                                    .stroke(isSelected ? Color.ddAccentSky : Color.ddBorderDefault, lineWidth: isSelected ? 1.5 : 1)
+                            )
                         }
-                        .padding(14)
-                        .background(Color.ddBgCard)
-                        .cornerRadius(12)
-                        .overlay(
-                            RoundedRectangle(cornerRadius: 12)
-                                .stroke(Color.ddBorderDefault, lineWidth: 1)
-                        )
                     }
                     
+                    // Active Target Summary
                     HStack {
                         Image(systemName: "checkmark.shield.fill")
                             .foregroundColor(Color.ddAccentEmerald)
-                        Text("\(selectedPopularApps.count) Apps Selected for Shielding")
+                        Text("\(selectedAppNames.count) Apps Selected for Friction Shielding")
                             .font(.system(size: 12, weight: .bold))
                             .foregroundColor(.ddTextPrimary)
                         Spacer()
@@ -283,49 +314,6 @@ public struct Full11ScreenRewireOnboardingView: View {
         .padding(20)
     }
     
-    private func appIconPill(name: String, icon: String, bgGradient: [Color]) -> some View {
-        let isSelected = selectedPopularApps.contains(name)
-        return Button {
-            if isSelected {
-                selectedPopularApps.remove(name)
-            } else {
-                selectedPopularApps.insert(name)
-            }
-            HapticFeedbackManager.shared.buttonTap()
-        } label: {
-            HStack(spacing: 10) {
-                ZStack {
-                    RoundedRectangle(cornerRadius: 8)
-                        .fill(LinearGradient(colors: bgGradient, startPoint: .topLeading, endPoint: .bottomTrailing))
-                        .frame(width: 32, height: 32)
-                    Image(systemName: icon)
-                        .font(.system(size: 14, weight: .bold))
-                        .foregroundColor(.white)
-                }
-                
-                Text(name)
-                    .font(.system(size: 13, weight: .bold))
-                    .foregroundColor(.ddTextPrimary)
-                    .lineLimit(1)
-                
-                Spacer()
-                
-                if isSelected {
-                    Image(systemName: "checkmark.circle.fill")
-                        .font(.system(size: 14))
-                        .foregroundColor(Color.ddAccentSky)
-                }
-            }
-            .padding(10)
-            .background(isSelected ? Color.ddBgSubtle : Color.ddBgCard)
-            .cornerRadius(12)
-            .overlay(
-                RoundedRectangle(cornerRadius: 12)
-                    .stroke(isSelected ? Color.ddAccentSky : Color.ddBorderDefault, lineWidth: isSelected ? 1.5 : 1)
-            )
-        }
-    }
-    
     // MARK: - Screen 3: Self-Reported Time
     private var screen3TimeSpent: some View {
         VStack(alignment: .leading, spacing: 18) {
@@ -338,7 +326,7 @@ public struct Full11ScreenRewireOnboardingView: View {
                     .foregroundColor(.ddTextPrimary)
                     .fixedSize(horizontal: false, vertical: true)
             }
-            .padding(.top, 8)
+            .padding(.top, 4)
             
             VStack(spacing: 10) {
                 PremiumSelectCard(title: "< 1 Hour / Day", subtitle: "Light check-ins", isSelected: dailyHoursSpent == 1.0, action: { dailyHoursSpent = 1.0 })
@@ -464,7 +452,7 @@ public struct Full11ScreenRewireOnboardingView: View {
                     .font(.system(size: 13))
                     .foregroundColor(Color.ddTextSecondary)
             }
-            .padding(.top, 8)
+            .padding(.top, 4)
             
             ScrollView {
                 VStack(spacing: 8) {
@@ -612,7 +600,7 @@ public struct Full11ScreenRewireOnboardingView: View {
                     .font(.system(size: 13))
                     .foregroundColor(Color.ddTextSecondary)
             }
-            .padding(.top, 8)
+            .padding(.top, 4)
             
             VStack(spacing: 10) {
                 PremiumSelectCard(
@@ -652,7 +640,7 @@ public struct Full11ScreenRewireOnboardingView: View {
                 .foregroundColor(Color.ddAccentSky)
             
             VStack(spacing: 8) {
-                Text("Enable Screen Time Shield")
+                Text("Enable Focus Shield")
                     .font(.system(size: 24, weight: .heavy, design: .rounded))
                     .foregroundColor(.ddTextPrimary)
                 Text("Enables intentional friction protection for your selected apps.")
@@ -777,9 +765,8 @@ public struct Full11ScreenRewireOnboardingView: View {
         var profile = dataStore.activeProfile
         profile.temporaryUnlockMinutes = selectedAccessTierMinutes
         dataStore.activeProfile = profile
-        dataStore.shieldedTargetAppNames = Array(selectedPopularApps)
+        dataStore.shieldedTargetAppNames = Array(selectedAppNames)
         
-        // Zero initial balance: User must complete a challenge to earn minutes!
         wallet.availableSeconds = 0
         wallet.dailyEarnedSeconds = 0
         

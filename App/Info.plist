@@ -23,7 +23,10 @@
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
 	
-	<!-- Native Full-Screen Edge-to-Edge Launch Configuration -->
+	<!-- Native Full-Screen Launch Storyboard Configuration -->
+	<key>UILaunchStoryboardName</key>
+	<string>LaunchScreen</string>
+	
 	<key>UILaunchScreen</key>
 	<dict>
 		<key>UIColorName</key>
@@ -56,6 +59,27 @@
 		<string>location</string>
 		<string>processing</string>
 		<string>remote-notification</string>
+	</array>
+	
+	<!-- Installed Apps Detection Schemes -->
+	<key>LSApplicationQueriesSchemes</key>
+	<array>
+		<string>instagram</string>
+		<string>youtube</string>
+		<string>tiktok</string>
+		<string>twitter</string>
+		<string>x</string>
+		<string>snapchat</string>
+		<string>whatsapp</string>
+		<string>reddit</string>
+		<string>netflix</string>
+		<string>spotify</string>
+		<string>discord</string>
+		<string>threads</string>
+		<string>pinterest</string>
+		<string>facebook</string>
+		<string>tg</string>
+		<string>twitch</string>
 	</array>
 	
 	<!-- Deep Link URL Schemes -->
