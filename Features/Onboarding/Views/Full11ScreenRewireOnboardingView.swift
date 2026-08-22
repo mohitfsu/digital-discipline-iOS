@@ -1,7 +1,7 @@
 import SwiftUI
 import FamilyControls
 
-/// Complete 11-Screen Rewire-Style Onboarding Experience with real installed app detection and safe area spacing
+/// Complete 11-Screen Rewire-Style Onboarding starting with Persona Selection
 public struct Full11ScreenRewireOnboardingView: View {
     @ObservedObject var dataStore = SharedDataStore.shared
     @ObservedObject var shieldManager = ShieldManager.shared
@@ -9,10 +9,13 @@ public struct Full11ScreenRewireOnboardingView: View {
     @ObservedObject var wallet = EarnedTimeWallet.shared
     
     @State private var currentStep: Int = 0
+    @State private var selectedProfileType: ProfileType = .selfDiscipline
     @State private var selectedPatterns: Set<String> = ["I scroll longer than planned"]
     @State private var dailyHoursSpent: Double = 3.0
     @State private var installedApps: [DeviceInstalledApp] = []
-    @State private var selectedAppNames: Set<String> = []
+    @State private var selectedAppNames: Set<String> = ["Instagram"]
+    @State private var customAppNameInput: String = ""
+    @State private var isShowingAddApp = false
     @State private var selectedInterventionCategories: Set<String> = ["MOVE", "BREATHE", "RESET", "CREATE"]
     @State private var selectedAccessTierMinutes: Int = 5
     @State private var isAuthHandshakeCompleted = false
@@ -36,15 +39,15 @@ public struct Full11ScreenRewireOnboardingView: View {
                 if currentStep > 0 && currentStep < 10 {
                     progressBar
                         .padding(.horizontal, 24)
-                        .padding(.top, 52) // Ample spacing below Dynamic Island
+                        .padding(.top, 56)
                         .padding(.bottom, 12)
                 } else {
-                    Spacer().frame(height: 48)
+                    Spacer().frame(height: 52)
                 }
                 
                 // Screen Content
                 TabView(selection: $currentStep) {
-                    screen0Manifesto.tag(0)
+                    screen0PersonaMode.tag(0)
                     screen1Patterns.tag(1)
                     screen2InstalledAppsPicker.tag(2)
                     screen3TimeSpent.tag(3)
@@ -76,9 +79,8 @@ public struct Full11ScreenRewireOnboardingView: View {
     private func loadInstalledApps() {
         let detected = InstalledAppsDetector.shared.getInstalledAppsOnDevice()
         self.installedApps = detected
-        // Auto-select first 2-3 installed apps by default
-        if selectedAppNames.isEmpty {
-            self.selectedAppNames = Set(detected.prefix(3).map { $0.name })
+        if selectedAppNames.isEmpty && !detected.isEmpty {
+            self.selectedAppNames = [detected[0].name]
         }
     }
     
@@ -94,67 +96,57 @@ public struct Full11ScreenRewireOnboardingView: View {
         }
     }
     
-    // MARK: - Screen 0: Cinematic Manifesto
-    private var screen0Manifesto: some View {
-        VStack(spacing: 24) {
-            Spacer()
-            
-            ZStack {
-                Circle()
-                    .fill(
-                        RadialGradient(
-                            colors: [Color.ddAccentSky.opacity(0.35), Color.clear],
-                            center: .center,
-                            startRadius: 20,
-                            endRadius: 100
-                        )
-                    )
-                    .frame(width: 150, height: 150)
-                
-                Image(systemName: "flame.circle.fill")
-                    .font(.system(size: 68))
-                    .foregroundStyle(
-                        LinearGradient(
-                            colors: [Color.ddAccentSky, Color.ddAccentEmerald],
-                            startPoint: .topLeading,
-                            endPoint: .bottomTrailing
-                        )
-                    )
-            }
-            
-            VStack(spacing: 14) {
-                Text("Your phone isn't the problem.")
-                    .font(.system(size: 26, weight: .black, design: .rounded))
+    // MARK: - Screen 0: Mode Selection (Self Mode vs Family vs Corporate)
+    private var screen0PersonaMode: some View {
+        VStack(alignment: .leading, spacing: 20) {
+            VStack(alignment: .leading, spacing: 6) {
+                Text("WELCOME TO DIGITAL DISCIPLINE")
+                    .font(.system(size: 10, weight: .bold, design: .monospaced))
+                    .foregroundColor(Color.ddAccentSky)
+                Text("Choose Your Mode")
+                    .font(.system(size: 26, weight: .heavy, design: .rounded))
                     .foregroundColor(.ddTextPrimary)
-                    .multilineTextAlignment(.center)
-                    .fixedSize(horizontal: false, vertical: true)
-                
-                Text("The moment between impulse and action is.")
-                    .font(.system(size: 20, weight: .bold, design: .rounded))
-                    .foregroundStyle(
-                        LinearGradient(
-                            colors: [Color.ddAccentSky, Color.ddAccentSkyGlow],
-                            startPoint: .leading,
-                            endPoint: .trailing
-                        )
-                    )
-                    .multilineTextAlignment(.center)
-                    .fixedSize(horizontal: false, vertical: true)
-                
-                Text("Digital Discipline traps the automatic dopamine loop and gives you back hours of deep focus.")
+                Text("Select how you want the neuro-friction system configured.")
                     .font(.system(size: 14))
                     .foregroundColor(Color.ddTextSecondary)
-                    .multilineTextAlignment(.center)
-                    .padding(.horizontal, 20)
-                    .lineSpacing(4)
-                    .fixedSize(horizontal: false, vertical: true)
+            }
+            .padding(.top, 8)
+            
+            VStack(spacing: 12) {
+                PremiumSelectCard(
+                    title: "🧘 Self-Discipline Mode",
+                    subtitle: "Personal focus: Lock Instagram/games behind 30s physical and mindful friction.",
+                    icon: "🔥",
+                    isSelected: selectedProfileType == .selfDiscipline,
+                    action: { selectedProfileType = .selfDiscipline }
+                )
+                
+                PremiumSelectCard(
+                    title: "👨‍👩‍👧 Family & Parental Mode",
+                    subtitle: "Parent & child device management: PIN locks, anti-tamper, and study hours.",
+                    icon: "👨‍👩‍👧",
+                    isSelected: selectedProfileType == .family,
+                    action: { selectedProfileType = .family }
+                )
+                
+                PremiumSelectCard(
+                    title: "🏢 Corporate / Office Mode",
+                    subtitle: "Workplace productivity: Strict 9-5 work hours, social blocking, deep focus blocks.",
+                    icon: "🏢",
+                    isSelected: selectedProfileType == .corporate,
+                    action: { selectedProfileType = .corporate }
+                )
             }
             
             Spacer()
             
-            Text("🔒 Private • On-Device Neural Engine • Zero Tracking")
-                .font(.system(size: 11, weight: .semibold, design: .monospaced))
-                .foregroundColor(Color.ddTextMuted)
+            HStack {
+                Spacer()
+                Text("🔒 Private • On-Device Neural Engine • Zero Tracking")
+                    .font(.system(size: 11, weight: .semibold, design: .monospaced))
+                    .foregroundColor(Color.ddTextMuted)
+                Spacer()
+            }
         }
         .padding(20)
     }
@@ -220,18 +212,18 @@ public struct Full11ScreenRewireOnboardingView: View {
         }
     }
     
-    // MARK: - Screen 2: Real Installed Apps on Device (No Category Grouping)
+    // MARK: - Screen 2: Real Installed Apps on Device + Add App
     private var screen2InstalledAppsPicker: some View {
         VStack(alignment: .leading, spacing: 16) {
             VStack(alignment: .leading, spacing: 4) {
-                Text("INSTALLED ON YOUR PHONE")
+                Text("TARGET APPS TO SHIELD")
                     .font(.system(size: 10, weight: .bold, design: .monospaced))
                     .foregroundColor(Color.ddAccentSky)
-                Text("Select Apps to Shield")
+                Text("Select Apps on Your Phone")
                     .font(.system(size: 24, weight: .heavy, design: .rounded))
                     .foregroundColor(.ddTextPrimary)
                     .fixedSize(horizontal: false, vertical: true)
-                Text("Only apps found on your phone are listed, sorted with most used on top.")
+                Text("Select the apps you want protected behind physical friction resets.")
                     .font(.system(size: 13))
                     .foregroundColor(Color.ddTextSecondary)
                     .fixedSize(horizontal: false, vertical: true)
@@ -240,6 +232,7 @@ public struct Full11ScreenRewireOnboardingView: View {
             
             ScrollView {
                 VStack(spacing: 10) {
+                    // Apps List
                     ForEach(installedApps) { app in
                         let isSelected = selectedAppNames.contains(app.name)
                         let gradientColors = app.gradientColors.map { Color(hex: $0) }
@@ -266,7 +259,7 @@ public struct Full11ScreenRewireOnboardingView: View {
                                     Text(app.name)
                                         .font(.system(size: 15, weight: .bold, design: .rounded))
                                         .foregroundColor(.ddTextPrimary)
-                                    Text("Installed • Shield with 30s reset")
+                                    Text("Shield with 30s physical reset")
                                         .font(.system(size: 11))
                                         .foregroundColor(Color.ddTextSecondary)
                                 }
@@ -290,6 +283,54 @@ public struct Full11ScreenRewireOnboardingView: View {
                             .overlay(
                                 RoundedRectangle(cornerRadius: 14)
                                     .stroke(isSelected ? Color.ddAccentSky : Color.ddBorderDefault, lineWidth: isSelected ? 1.5 : 1)
+                            )
+                        }
+                    }
+                    
+                    // Add Custom App Option
+                    if isShowingAddApp {
+                        HStack(spacing: 10) {
+                            TextField("Enter App Name (e.g. Chess)", text: $customAppNameInput)
+                                .foregroundColor(.white)
+                                .padding(12)
+                                .background(Color.ddBgSubtle)
+                                .cornerRadius(10)
+                            
+                            Button("Add") {
+                                if !customAppNameInput.trimmingCharacters(in: .whitespaces).isEmpty {
+                                    let cleanName = customAppNameInput.trimmingCharacters(in: .whitespaces)
+                                    selectedAppNames.insert(cleanName)
+                                    installedApps.append(DeviceInstalledApp(id: cleanName.lowercased(), name: cleanName, scheme: "\(cleanName.lowercased())://", iconName: "app.fill", gradientColors: ["38BDF8", "0284C7"]))
+                                    customAppNameInput = ""
+                                    isShowingAddApp = false
+                                    HapticFeedbackManager.shared.buttonTap()
+                                }
+                            }
+                            .font(.system(size: 13, weight: .bold))
+                            .foregroundColor(.white)
+                            .padding(.horizontal, 14)
+                            .padding(.vertical, 12)
+                            .background(Color.ddAccentSky)
+                            .cornerRadius(10)
+                        }
+                    } else {
+                        Button {
+                            isShowingAddApp = true
+                        } label: {
+                            HStack {
+                                Image(systemName: "plus.circle.fill")
+                                    .foregroundColor(Color.ddAccentSky)
+                                Text("+ Add Custom App Name")
+                                    .font(.system(size: 13, weight: .bold))
+                                    .foregroundColor(Color.ddAccentSky)
+                                Spacer()
+                            }
+                            .padding(12)
+                            .background(Color.ddBgCard)
+                            .cornerRadius(12)
+                            .overlay(
+                                RoundedRectangle(cornerRadius: 12)
+                                    .stroke(Color.ddBorderDefault, lineWidth: 1)
                             )
                         }
                     }
@@ -596,7 +637,7 @@ public struct Full11ScreenRewireOnboardingView: View {
                     .font(.system(size: 24, weight: .heavy, design: .rounded))
                     .foregroundColor(.ddTextPrimary)
                     .fixedSize(horizontal: false, vertical: true)
-                Text("How many minutes of Instagram/TikTok per friction reset?")
+                Text("How many minutes of Instagram per friction reset?")
                     .font(.system(size: 13))
                     .foregroundColor(Color.ddTextSecondary)
             }
@@ -744,7 +785,7 @@ public struct Full11ScreenRewireOnboardingView: View {
                     completeAndLaunch()
                 }
             } label: {
-                Text(currentStep == 0 ? "BUILD MY PLAN" : (currentStep == 10 ? "Enter Dopamine Hub" : (currentStep == 4 ? "I WANT TO CHANGE THIS" : "Continue")))
+                Text(currentStep == 0 ? "CONFIRM MODE" : (currentStep == 10 ? "Enter Dopamine Hub" : (currentStep == 4 ? "I WANT TO CHANGE THIS" : "Continue")))
                     .font(.system(size: 15, weight: .bold))
                     .foregroundColor(.white)
                     .frame(maxWidth: .infinity)
@@ -762,6 +803,8 @@ public struct Full11ScreenRewireOnboardingView: View {
     }
     
     private func completeAndLaunch() {
+        ProfileTemplateManager.shared.applyPresetType(selectedProfileType)
+        
         var profile = dataStore.activeProfile
         profile.temporaryUnlockMinutes = selectedAccessTierMinutes
         dataStore.activeProfile = profile

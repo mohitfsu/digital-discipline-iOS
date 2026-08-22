@@ -8,12 +8,11 @@ public struct FocusHomeView: View {
     @ObservedObject var authManager = ScreenTimeAuthorizationManager.shared
     @ObservedObject var wallet = EarnedTimeWallet.shared
     
-    @State private var isPickerPresented = false
     @State private var isWorkoutModalPresented = false
     @State private var isUrgeModalPresented = false
     @State private var isZenEnsoPresented = false
+    @State private var isShortcutsGuidePresented = false
     @State private var selectedInterventionToRun: InterventionType = .pushUps
-    @State private var selectedCategoryFilter: String = "ALL"
     
     public init() {}
     
@@ -32,6 +31,9 @@ public struct FocusHomeView: View {
                         
                         // 🔥 Viral "I AM HAVING AN URGE" Panic Button
                         urgeSurfingHeroButton
+                        
+                        // ⚡ Instant App Trap Setup Card (Shortcuts Automation)
+                        shortcutsAutomationSetupCard
                         
                         // Active Temporary Pass Countdown (if unlocked)
                         if dataStore.isTemporaryUnlockActive() {
@@ -59,21 +61,6 @@ public struct FocusHomeView: View {
             }
             .navigationTitle("Today")
             .navigationBarTitleDisplayMode(.inline)
-            .toolbar {
-                ToolbarItem(placement: .topBarTrailing) {
-                    Button {
-                        isPickerPresented = true
-                    } label: {
-                        Image(systemName: "plus.app")
-                            .font(.system(size: 16, weight: .bold))
-                            .foregroundColor(Color.ddAccentSky)
-                    }
-                }
-            }
-            .familyActivityPicker(
-                isPresented: $isPickerPresented,
-                selection: $shieldManager.activitySelection
-            )
             .fullScreenCover(isPresented: $isWorkoutModalPresented) {
                 InterventionRunnerView(
                     intervention: selectedInterventionToRun,
@@ -87,6 +74,9 @@ public struct FocusHomeView: View {
                 ZenEnsoCanvasView(
                     unlockDurationMinutes: dataStore.activeProfile.temporaryUnlockMinutes
                 )
+            }
+            .sheet(isPresented: $isShortcutsGuidePresented) {
+                ShortcutsAutomationGuideView()
             }
         }
     }
@@ -133,7 +123,7 @@ public struct FocusHomeView: View {
                 isSessionActive: dataStore.isTemporaryUnlockActive()
             )
             
-            // Quick Action Pill: + Earn 10 Mins Now
+            // Quick Action Pill: + Earn 5 Mins Now
             Button {
                 selectedInterventionToRun = .pushUps
                 isWorkoutModalPresented = true
@@ -201,6 +191,51 @@ public struct FocusHomeView: View {
                     .stroke(Color.ddAccentAmber.opacity(0.5), lineWidth: 1.5)
             )
             .shadow(color: Color.ddAccentAmber.opacity(0.15), radius: 10)
+        }
+    }
+    
+    // MARK: - Shortcuts Automation Setup Card (One Sec Style)
+    private var shortcutsAutomationSetupCard: some View {
+        Button {
+            isShortcutsGuidePresented = true
+            HapticFeedbackManager.shared.buttonTap()
+        } label: {
+            HStack(spacing: 14) {
+                ZStack {
+                    Circle()
+                        .fill(Color.ddAccentSky.opacity(0.15))
+                        .frame(width: 40, height: 40)
+                    Image(systemName: "bolt.badge.automatic.fill")
+                        .font(.system(size: 18))
+                        .foregroundColor(Color.ddAccentSky)
+                }
+                
+                VStack(alignment: .leading, spacing: 2) {
+                    Text("Auto-Trap Instagram Opens")
+                        .font(.system(size: 14, weight: .bold, design: .rounded))
+                        .foregroundColor(.ddTextPrimary)
+                    Text("Intercept Instagram opening $\\rightarrow$ Require 30s reset")
+                        .font(.system(size: 11))
+                        .foregroundColor(Color.ddTextSecondary)
+                }
+                
+                Spacer()
+                
+                Text("Setup")
+                    .font(.system(size: 11, weight: .bold))
+                    .foregroundColor(Color.ddAccentSky)
+                    .padding(.horizontal, 10)
+                    .padding(.vertical, 5)
+                    .background(Color.ddBgSubtle)
+                    .cornerRadius(8)
+            }
+            .padding(12)
+            .background(Color.ddBgCard)
+            .cornerRadius(14)
+            .overlay(
+                RoundedRectangle(cornerRadius: 14)
+                    .stroke(Color.ddAccentSky.opacity(0.4), lineWidth: 1)
+            )
         }
     }
     
@@ -408,9 +443,8 @@ public struct FocusHomeView: View {
         case "Twitter / X": return "message.fill"
         case "Reddit": return "bubble.left.fill"
         case "Snapchat": return "ghost.fill"
-        case "Games": return "gamecontroller.fill"
         case "Netflix": return "film.fill"
-        default: return "apps.iphone"
+        default: return "app.fill"
         }
     }
     
@@ -499,6 +533,83 @@ public struct FocusHomeView: View {
                 RoundedRectangle(cornerRadius: 14)
                     .stroke(Color.ddBorderDefault, lineWidth: 1)
             )
+        }
+    }
+}
+
+/// One Sec-style Shortcuts Automation Guide View
+public struct ShortcutsAutomationGuideView: View {
+    @Environment(\.dismiss) private var dismiss
+    
+    public var body: some View {
+        ZStack {
+            Color.ddBgDeep.ignoresSafeArea()
+            
+            VStack(spacing: 24) {
+                // Header
+                HStack {
+                    Text("Auto-Trap Instagram")
+                        .font(.system(size: 20, weight: .bold, design: .rounded))
+                        .foregroundColor(.ddTextPrimary)
+                    Spacer()
+                    Button {
+                        dismiss()
+                    } label: {
+                        Image(systemName: "xmark.circle.fill")
+                            .font(.system(size: 24))
+                            .foregroundColor(Color.ddTextSecondary)
+                    }
+                }
+                
+                VStack(alignment: .leading, spacing: 14) {
+                    guideStepRow(step: "1", title: "Open Apple 'Shortcuts' App", desc: "Tap the 'Automation' tab at the bottom.")
+                    guideStepRow(step: "2", title: "Create Personal Automation", desc: "Select 'App' $\\rightarrow$ Choose 'Instagram' $\\rightarrow$ Is Opened.")
+                    guideStepRow(step: "3", title: "Add 'Open App' Action", desc: "Choose 'Open Digital Discipline' $\\rightarrow$ Turn OFF 'Ask Before Running'.")
+                }
+                .padding(16)
+                .background(Color.ddBgCard)
+                .cornerRadius(16)
+                
+                Button {
+                    if let url = URL(string: "shortcuts://") {
+                        if UIApplication.shared.canOpenURL(url) {
+                            UIApplication.shared.open(url)
+                        }
+                    }
+                    dismiss()
+                } label: {
+                    Text("Open Shortcuts App Now")
+                        .font(.system(size: 15, weight: .bold))
+                        .foregroundColor(.white)
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, 14)
+                        .background(Color.ddAccentSky)
+                        .cornerRadius(14)
+                }
+                
+                Spacer()
+            }
+            .padding(24)
+        }
+    }
+    
+    private func guideStepRow(step: String, title: String, desc: String) -> some View {
+        HStack(alignment: .top, spacing: 12) {
+            Text(step)
+                .font(.system(size: 12, weight: .black, design: .monospaced))
+                .foregroundColor(Color.ddAccentSky)
+                .frame(width: 24, height: 24)
+                .background(Color.ddAccentSky.opacity(0.15))
+                .clipShape(Circle())
+            
+            VStack(alignment: .leading, spacing: 2) {
+                Text(title)
+                    .font(.system(size: 14, weight: .bold))
+                    .foregroundColor(.ddTextPrimary)
+                Text(desc)
+                    .font(.system(size: 12))
+                    .foregroundColor(Color.ddTextSecondary)
+            }
         }
     }
 }

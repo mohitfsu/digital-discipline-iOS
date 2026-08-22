@@ -65,8 +65,8 @@ public final class CameraViewController: UIViewController, AVCaptureVideoDataOut
             }
         case .notDetermined:
             AVCaptureDevice.requestAccess(for: .video) { [weak self] granted in
-                if granted {
-                    DispatchQueue.main.async {
+                DispatchQueue.main.async {
+                    if granted {
                         self?.setupCamera()
                         DispatchQueue.global(qos: .userInitiated).async {
                             self?.captureSession.startRunning()
@@ -109,8 +109,11 @@ public final class CameraViewController: UIViewController, AVCaptureVideoDataOut
         if captureSession.canAddOutput(videoOutput) {
             captureSession.addOutput(videoOutput)
             if let connection = videoOutput.connection(with: .video) {
-                connection.videoOrientation = .portrait
-                if frontCamera.position == .front {
+                // Safe checks to avoid NSInvalidArgumentException crashes
+                if connection.isVideoOrientationSupported {
+                    connection.videoOrientation = .portrait
+                }
+                if connection.isVideoMirroringSupported && frontCamera.position == .front {
                     connection.isVideoMirrored = true
                 }
             }
