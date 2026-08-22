@@ -29,7 +29,7 @@ public final class CameraViewController: UIViewController, AVCaptureVideoDataOut
     
     public override func viewDidLoad() {
         super.viewDidLoad()
-        view.backgroundColor = UIColor(DisciplineTheme.background)
+        view.backgroundColor = .black
         checkPermissionsAndSetup()
     }
     
@@ -60,6 +60,9 @@ public final class CameraViewController: UIViewController, AVCaptureVideoDataOut
         switch AVCaptureDevice.authorizationStatus(for: .video) {
         case .authorized:
             setupCamera()
+            DispatchQueue.global(qos: .userInitiated).async { [weak self] in
+                self?.captureSession.startRunning()
+            }
         case .notDetermined:
             AVCaptureDevice.requestAccess(for: .video) { [weak self] granted in
                 if granted {
@@ -72,7 +75,7 @@ public final class CameraViewController: UIViewController, AVCaptureVideoDataOut
                 }
             }
         default:
-            print("Camera access denied or restricted")
+            break
         }
     }
     
@@ -80,30 +83,21 @@ public final class CameraViewController: UIViewController, AVCaptureVideoDataOut
         guard !isConfigured else { return }
         
         captureSession.beginConfiguration()
-        captureSession.sessionPreset = .hd1280x720
+        if captureSession.canSetSessionPreset(.hd1280x720) {
+            captureSession.sessionPreset = .hd1280x720
+        } else {
+            captureSession.sessionPreset = .high
+        }
         
         // Setup Front-Facing Camera with safety fallback
         guard let frontCamera = AVCaptureDevice.default(.builtInWideAngleCamera, for: .video, position: .front) ?? AVCaptureDevice.default(for: .video),
               let videoInput = try? AVCaptureDeviceInput(device: frontCamera) else {
             captureSession.commitConfiguration()
-            print("Failed to initialize camera input")
             return
         }
         
         if captureSession.canAddInput(videoInput) {
             captureSession.addInput(videoInput)
-        }
-        
-        // Attempt to configure 60 FPS if supported safely
-        if (try? frontCamera.lockForConfiguration()) != nil {
-            for range in frontCamera.activeFormat.videoSupportedFrameRateRanges {
-                if range.maxFrameRate >= 60.0 {
-                    frontCamera.activeVideoMinFrameDuration = CMTime(value: 1, timescale: 60)
-                    frontCamera.activeVideoMaxFrameDuration = CMTime(value: 1, timescale: 60)
-                    break
-                }
-            }
-            frontCamera.unlockForConfiguration()
         }
         
         // Video Output Setup

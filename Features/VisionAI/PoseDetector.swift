@@ -42,21 +42,21 @@ public struct BodyPoseFrame: Sendable {
     }
 }
 
-/// Vision Body Pose Detection Worker utilizing Apple Neural Engine (ANE)
+/// Vision Body Pose Detection Worker utilizing Apple Neural Engine (ANE) - Thread-Safe
 public final class PoseDetector: @unchecked Sendable {
     public static let shared = PoseDetector()
     
-    private let request = VNDetectHumanBodyPoseRequest()
-    private let minConfidence: Float = 0.45
+    private let minConfidence: Float = 0.40
     
     private init() {}
     
-    /// Processes a camera frame sample buffer and extracts recognized body joints
+    /// Processes a camera frame sample buffer and extracts recognized body joints safely
     public func processFrame(sampleBuffer: CMSampleBuffer) -> BodyPoseFrame? {
         guard let pixelBuffer = CMSampleBufferGetImageBuffer(sampleBuffer) else {
             return nil
         }
         
+        let request = VNDetectHumanBodyPoseRequest()
         let handler = VNImageRequestHandler(cvPixelBuffer: pixelBuffer, orientation: .up, options: [:])
         
         do {
@@ -68,7 +68,6 @@ public final class PoseDetector: @unchecked Sendable {
             let timestamp = CMSampleBufferGetPresentationTimeStamp(sampleBuffer).seconds
             return extractKeypoints(from: observation, timestamp: timestamp)
         } catch {
-            print("Vision pose detection error: \(error)")
             return nil
         }
     }

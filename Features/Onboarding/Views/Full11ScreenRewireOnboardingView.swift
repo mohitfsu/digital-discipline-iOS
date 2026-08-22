@@ -1,7 +1,7 @@
 import SwiftUI
 import FamilyControls
 
-/// Complete 11-Screen Rewire-Style Onboarding Experience built with Dark OLED Design System
+/// Complete 11-Screen Rewire-Style Onboarding Experience with zero-balance wallet start and safe area top spacing
 public struct Full11ScreenRewireOnboardingView: View {
     @ObservedObject var dataStore = SharedDataStore.shared
     @ObservedObject var shieldManager = ShieldManager.shared
@@ -32,11 +32,12 @@ public struct Full11ScreenRewireOnboardingView: View {
             Color.ddBgDeep.ignoresSafeArea()
             
             VStack(spacing: 0) {
-                // Top Progress Bar
+                // Top Progress Bar with Dynamic Island Safe Padding
                 if currentStep > 0 && currentStep < 10 {
                     progressBar
                         .padding(.horizontal, 24)
-                        .padding(.top, 12)
+                        .padding(.top, 44) // Safe spacing below Dynamic Island
+                        .padding(.bottom, 8)
                 }
                 
                 // Screen Content
@@ -160,7 +161,7 @@ public struct Full11ScreenRewireOnboardingView: View {
                     .foregroundColor(.ddTextPrimary)
                     .fixedSize(horizontal: false, vertical: true)
             }
-            .padding(.top, 12)
+            .padding(.top, 8)
             
             VStack(spacing: 10) {
                 PremiumSelectCard(
@@ -209,7 +210,7 @@ public struct Full11ScreenRewireOnboardingView: View {
         }
     }
     
-    // MARK: - Screen 2: Distraction App Selection with Real App Icons
+    // MARK: - Screen 2: Distraction App Selection
     private var screen2AppPicker: some View {
         VStack(alignment: .leading, spacing: 16) {
             VStack(alignment: .leading, spacing: 4) {
@@ -225,11 +226,10 @@ public struct Full11ScreenRewireOnboardingView: View {
                     .foregroundColor(Color.ddTextSecondary)
                     .fixedSize(horizontal: false, vertical: true)
             }
-            .padding(.top, 12)
+            .padding(.top, 8)
             
             ScrollView {
                 VStack(spacing: 14) {
-                    // Real Visual App Grid
                     LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 10) {
                         appIconPill(name: "Instagram", icon: "camera.fill", bgGradient: [Color(hex: "833AB4"), Color(hex: "FD1D1D"), Color(hex: "FCB045")])
                         appIconPill(name: "TikTok", icon: "play.tv.fill", bgGradient: [Color(hex: "00F2FE"), Color(hex: "4FACFE")])
@@ -241,7 +241,6 @@ public struct Full11ScreenRewireOnboardingView: View {
                         appIconPill(name: "Netflix", icon: "film.fill", bgGradient: [Color(hex: "E50914"), Color(hex: "B81D24")])
                     }
                     
-                    // Native Apple Activity Picker Button
                     Button {
                         isActivityPickerPresented = true
                     } label: {
@@ -265,7 +264,6 @@ public struct Full11ScreenRewireOnboardingView: View {
                         )
                     }
                     
-                    // Active Target Summary
                     HStack {
                         Image(systemName: "checkmark.shield.fill")
                             .foregroundColor(Color.ddAccentEmerald)
@@ -340,7 +338,7 @@ public struct Full11ScreenRewireOnboardingView: View {
                     .foregroundColor(.ddTextPrimary)
                     .fixedSize(horizontal: false, vertical: true)
             }
-            .padding(.top, 12)
+            .padding(.top, 8)
             
             VStack(spacing: 10) {
                 PremiumSelectCard(title: "< 1 Hour / Day", subtitle: "Light check-ins", isSelected: dailyHoursSpent == 1.0, action: { dailyHoursSpent = 1.0 })
@@ -354,7 +352,7 @@ public struct Full11ScreenRewireOnboardingView: View {
         .padding(20)
     }
     
-    // MARK: - Screen 4: Lifetime Impact (Massive 72pt Glowing Stat)
+    // MARK: - Screen 4: Lifetime Impact
     private var screen4LifetimeLoss: some View {
         let yearsLost = (dailyHoursSpent * 365.0 * 55.0) / (24.0 * 365.0)
         
@@ -451,14 +449,14 @@ public struct Full11ScreenRewireOnboardingView: View {
         )
     }
     
-    // MARK: - Screen 6: 9 Intervention Categories Multi-Picker
+    // MARK: - Screen 6: 9 Intervention Categories
     private var screen6InterventionStyles: some View {
         VStack(alignment: .leading, spacing: 16) {
             VStack(alignment: .leading, spacing: 4) {
-                Text("NEURO-RESET MODES (60%)")
+                Text("NEURO-RESET MODES")
                     .font(.system(size: 10, weight: .bold, design: .monospaced))
                     .foregroundColor(Color.ddAccentSky)
-                Text("Pick Your 9 Reset Styles")
+                Text("Pick Your Reset Styles")
                     .font(.system(size: 24, weight: .heavy, design: .rounded))
                     .foregroundColor(.ddTextPrimary)
                     .fixedSize(horizontal: false, vertical: true)
@@ -466,7 +464,7 @@ public struct Full11ScreenRewireOnboardingView: View {
                     .font(.system(size: 13))
                     .foregroundColor(Color.ddTextSecondary)
             }
-            .padding(.top, 12)
+            .padding(.top, 8)
             
             ScrollView {
                 VStack(spacing: 8) {
@@ -539,7 +537,6 @@ public struct Full11ScreenRewireOnboardingView: View {
                     .foregroundColor(isBreathTestDone ? Color.ddAccentEmerald : Color.ddTextSecondary)
             }
             
-            // Reusable Breathing Pacer Orb
             BreathingPacerOrbView(
                 phaseText: isBreathTestDone ? "COMPLETED (3/3)" : "\(breathPhase.uppercased()) (\(breathCount)/3)",
                 secondsRemaining: max(0, 10 - (breathElapsedSeconds % 10))
@@ -615,7 +612,7 @@ public struct Full11ScreenRewireOnboardingView: View {
                     .font(.system(size: 13))
                     .foregroundColor(Color.ddTextSecondary)
             }
-            .padding(.top, 12)
+            .padding(.top, 8)
             
             VStack(spacing: 10) {
                 PremiumSelectCard(
@@ -721,7 +718,7 @@ public struct Full11ScreenRewireOnboardingView: View {
                 Text("Your Plan Is Active!")
                     .font(.system(size: 26, weight: .black, design: .rounded))
                     .foregroundColor(.ddTextPrimary)
-                Text("Your Dopamine Wallet is primed with \(selectedPopularApps.count) target apps. Each friction challenge will grant you a \(selectedAccessTierMinutes)-minute focus pass.")
+                Text("You start with 0 minutes. Complete a friction challenge to earn your first \(selectedAccessTierMinutes)-minute focus pass.")
                     .font(.system(size: 13))
                     .foregroundColor(Color.ddTextSecondary)
                     .multilineTextAlignment(.center)
@@ -782,8 +779,10 @@ public struct Full11ScreenRewireOnboardingView: View {
         dataStore.activeProfile = profile
         dataStore.shieldedTargetAppNames = Array(selectedPopularApps)
         
-        // Prime wallet with the exact chosen duration
-        wallet.availableSeconds = selectedAccessTierMinutes * 60
+        // Zero initial balance: User must complete a challenge to earn minutes!
+        wallet.availableSeconds = 0
+        wallet.dailyEarnedSeconds = 0
+        
         shieldManager.enforceShields()
         dataStore.completeOnboarding()
         HapticFeedbackManager.shared.workoutCompleted()
