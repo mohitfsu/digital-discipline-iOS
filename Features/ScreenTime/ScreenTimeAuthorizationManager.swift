@@ -12,7 +12,6 @@ public final class ScreenTimeAuthorizationManager: ObservableObject {
     @Published public var isAuthorized: Bool = false
     @Published public var errorMessage: String?
     
-    private let center = AuthorizationCenter.shared
     private var cancellables = Set<AnyCancellable>()
     
     private init() {
@@ -21,8 +20,13 @@ public final class ScreenTimeAuthorizationManager: ObservableObject {
     }
     
     public func updateStatus() {
-        self.authorizationStatus = center.authorizationStatus
-        self.isAuthorized = (center.authorizationStatus == .approved)
+        #if targetEnvironment(simulator)
+        self.authorizationStatus = .approved
+        self.isAuthorized = true
+        #else
+        self.authorizationStatus = AuthorizationCenter.shared.authorizationStatus
+        self.isAuthorized = (AuthorizationCenter.shared.authorizationStatus == .approved)
+        #endif
     }
     
     private func observeAuthorizationCenter() {
@@ -36,11 +40,11 @@ public final class ScreenTimeAuthorizationManager: ObservableObject {
     /// Requests Screen Time authorization for Individual usage
     public func requestIndividualAuthorization() async {
         do {
-            try await center.requestAuthorization(for: .individual)
+            try await AuthorizationCenter.shared.requestAuthorization(for: .individual)
             updateStatus()
             errorMessage = nil
         } catch {
-            errorMessage = "Screen Time Authorization Failed: \(error.localizedDescription)"
+            errorMessage = "Screen Time Authorization: \(error.localizedDescription)"
             updateStatus()
         }
     }
@@ -48,18 +52,18 @@ public final class ScreenTimeAuthorizationManager: ObservableObject {
     /// Requests Screen Time authorization for Child device management (Parental Control mode)
     public func requestChildAuthorization() async {
         do {
-            try await center.requestAuthorization(for: .child)
+            try await AuthorizationCenter.shared.requestAuthorization(for: .child)
             updateStatus()
             errorMessage = nil
         } catch {
-            errorMessage = "Child Screen Time Authorization Failed: \(error.localizedDescription)"
+            errorMessage = "Child Screen Time Authorization: \(error.localizedDescription)"
             updateStatus()
         }
     }
     
     /// Revokes authorization (if supported by system)
     public func revokeAuthorization() {
-        center.revokeAuthorization { [weak self] result in
+        AuthorizationCenter.shared.revokeAuthorization { [weak self] result in
             Task { @MainActor in
                 switch result {
                 case .success:

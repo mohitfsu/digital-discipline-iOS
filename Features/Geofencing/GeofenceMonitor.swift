@@ -16,12 +16,16 @@ public final class GeofenceMonitor: NSObject, ObservableObject, CLLocationManage
     public override init() {
         super.init()
         locationManager.delegate = self
-        locationManager.allowsBackgroundLocationUpdates = true
-        locationManager.pausesLocationUpdatesAutomatically = false
+        locationManager.pausesLocationUpdatesAutomatically = true
     }
     
     /// Synchronizes monitored regions with the currently saved geofences
     public func synchronizeGeofences() {
+        guard CLLocationManager.isMonitoringAvailable(for: CLCircularRegion.self) else {
+            print("Geofence monitoring not supported on this device/configuration")
+            return
+        }
+        
         // Stop previous regions
         for region in locationManager.monitoredRegions {
             locationManager.stopMonitoring(for: region)

@@ -25,7 +25,8 @@ struct DigitalDisciplineApp: App {
                         unlockDurationMinutes: dataStore.activeProfile.temporaryUnlockMinutes
                     )
                 }
-                .onAppear {
+                .task {
+                    // Initialize background services safely after UI mounts
                     geofenceMonitor.synchronizeGeofences()
                     ScheduleActivityManager.shared.registerSchedules(dataStore.activeProfile.schedules)
                 }
